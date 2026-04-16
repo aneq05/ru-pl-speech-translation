@@ -1,15 +1,18 @@
 # Data folder guide
 
 - `raw/`: original audio files from speakers (not tracked in git).
-- `interim/`: augmented or transformed audio (not tracked in git).
-- `processed/`: model-ready artifacts and features (not tracked in git).
-- `metadata/`: manifests, transcripts, and references used by experiments.
+- `interim/`: temporary artifacts (not tracked in git).
+- `processed/`: processed artifacts (not tracked in git).
+- `metadata/`: manifests and references used by the pipeline.
 
-Recommended naming for raw files:
+Manifest columns (`data/metadata/manifest.csv`):
+- `sample_id`
+- `speaker_id`
+- `audio_path`
+- `split`
+- `ru_transcript_ref`
+- `pl_translation_ref`
+- `noise_condition`
+
+Recommended raw filename:
 `<speaker_id>_<sample_id>_<condition>.wav`
-
-Example condition labels:
-- `clean`
-- `noisy_10db`
-- `noisy_5db`
-

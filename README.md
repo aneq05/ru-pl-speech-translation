@@ -1,80 +1,85 @@
 # RU->PL Speech Translation (ASR Project)
 
-Repository for an engineering + research course project:
-comparison of methods for automatic translation of Russian speech into Polish.
+Simple and modular repository for comparing methods in:
+`Russian speech -> Polish translation`.
+
+Main architecture:
+`ASR (RU) -> Russian text normalization/tokenization -> MT (RU->PL) -> optional TTS (PL)`.
 
 ## Project goal
-Compare two approaches on the same dataset of Russian tongue twisters:
-
-1. Cascade pipeline: `ASR (RU) -> MT (RU->PL) -> TTS (PL)`.
-2. Integrated approach: direct `speech-to-text translation`.
-
-The project analyzes:
-- impact of recording quality,
-- speaker variability,
-- error propagation between stages.
+Compare approaches on the same dataset of Russian tongue twisters:
+1. Cascade approach (ASR + MT + optional TTS).
+2. Integrated speech translation approach (speech-to-text translation).
 
 ## Repository structure
 ```text
 .
-|-- configs/                 # Experiment and pipeline configs
 |-- data/
-|   |-- metadata/            # Manifests/transcripts/labels
-|   |-- raw/                 # Original audio (ignored by git)
-|   |-- interim/             # Augmented/intermediate data (ignored by git)
-|   `-- processed/           # Feature-ready data (ignored by git)
-|-- docs/                    # Project docs
-|-- experiments/             # Run outputs (ignored except .gitkeep)
-|-- notebooks/               # EDA and analysis notebooks
+|   |-- metadata/              # Manifest CSV files
+|   |-- raw/                   # Raw audio (not tracked)
+|   |-- interim/               # Temporary artifacts (not tracked)
+|   `-- processed/             # Processed artifacts (not tracked)
 |-- reports/
 |   |-- figures/
-|   `-- tables/
-|-- scripts/                 # CLI entrypoints for experiments
-|-- src/ru_pl_st/            # Python package
-|   |-- audio/
-|   |-- data/
-|   |-- eval/
-|   |-- pipelines/
-|   `-- utils/
-|-- tests/                   # Unit tests
-`-- opis_projektu_asr.md     # Polish project description
+|   |-- tables/
+|   `-- results/               # CSV outputs from benchmarks
+|-- src/ru_pl_st/
+|   |-- asr/                   # Russian ASR methods
+|   |-- text/                  # Russian text cleanup + token extraction
+|   |-- translation/           # RU->PL translation methods
+|   |-- tts/                   # TTS interfaces
+|   |-- pipelines/             # Cascade / integrated pipelines
+|   |-- comparison/            # Method comparison runners
+|   |-- metrics/               # WER, CER, BLEU, chrF
+|   |-- data/                  # Manifest loading and data models
+|   |-- utils/
+|   `-- cli.py                 # Main CLI entrypoint
+`-- opis_projektu_asr.md
 ```
 
-## Quick start
+## Install
 ```bash
 python -m venv .venv
-# Linux/macOS
-source .venv/bin/activate
-# Windows (PowerShell)
+# Windows PowerShell:
 # .venv\Scripts\Activate.ps1
-
-pip install -e .[dev]
-pytest
+pip install -e .
 ```
 
-## Minimal workflow
-1. Prepare metadata template:
+## CLI usage
+Create manifest template:
 ```bash
-python scripts/create_manifest_template.py --output data/metadata/manifest_template.csv
+ru-pl-st make-manifest-template --output data/metadata/manifest_template.csv
 ```
-2. Fill metadata with your recordings/transcripts/translations.
-3. Run baseline/integrated experiments:
+
+Run cascade comparison:
 ```bash
-python scripts/run_experiment.py --pipeline cascade --manifest data/metadata/manifest.csv --config configs/cascade.yaml
-python scripts/run_experiment.py --pipeline integrated --manifest data/metadata/manifest.csv --config configs/integrated.yaml
+ru-pl-st run-cascade --manifest data/metadata/manifest.csv
 ```
-4. Evaluate predictions:
+
+Run integrated comparison:
 ```bash
-python scripts/evaluate_predictions.py --predictions experiments/latest/predictions.csv
+ru-pl-st run-integrated --manifest data/metadata/manifest.csv
 ```
 
-## Suggested evaluation
-- ASR quality: `WER`, `CER`
-- Translation quality: `BLEU`, `chrF`
-- Runtime: latency / RTF
-- Optional listening test for TTS naturalness and intelligibility
+Run full comparison (cascade + integrated):
+```bash
+ru-pl-st run-full-comparison --manifest data/metadata/manifest.csv
+```
 
-## Notes
-- Keep raw recordings out of git unless they are explicitly licensed to be shared.
-- For course reporting, include both aggregate metrics and hardest failure cases.
+## Available built-in method names
+ASR:
+- `reference_asr`
+- `whisper_ru_sim`
+- `vosk_ru_sim`
 
+Translation:
+- `reference_mt`
+- `nllb_ru_pl_sim`
+- `marian_ru_pl_sim`
+
+Integrated:
+- `integrated_reference`
+- `integrated_s2tt_sim`
+
+Simulated methods are placeholders to let you benchmark pipeline logic immediately.
+Real model wrappers can be added in `src/ru_pl_st/asr/methods.py` and `src/ru_pl_st/translation/methods.py`.

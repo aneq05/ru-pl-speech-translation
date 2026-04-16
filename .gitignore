@@ -26,10 +26,8 @@ build/
 dist/
 *.egg-info/
 
-# Logs and experiment outputs
+# Logs
 *.log
-experiments/*
-!experiments/.gitkeep
 
 # Data artifacts (keep folder structure only)
 data/raw/*
@@ -39,3 +37,6 @@ data/processed/*
 !data/interim/.gitkeep
 !data/processed/.gitkeep
 
+# Benchmark outputs
+reports/results/*
+!reports/results/.gitkeep
