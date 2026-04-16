@@ -1,0 +1,18 @@
+pipeline:
+  type: cascade
+
+models:
+  asr:
+    provider: placeholder
+    model_name: ru_asr_model
+  mt:
+    provider: placeholder
+    model_name: ru_pl_mt_model
+  tts:
+    provider: placeholder
+    model_name: pl_tts_model
+
+runtime:
+  device: cpu
+  batch_size: 1
+

@@ -1,0 +1,15 @@
+pipeline:
+  type: integrated
+
+models:
+  s2tt:
+    provider: placeholder
+    model_name: ru_pl_s2tt_model
+  tts:
+    provider: placeholder
+    model_name: pl_tts_model
+
+runtime:
+  device: cpu
+  batch_size: 1
+
