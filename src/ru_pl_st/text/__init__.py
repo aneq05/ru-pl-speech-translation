@@ -1,2 +1,0 @@
-"""Russian text processing helpers."""
-

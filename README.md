@@ -1,43 +1,40 @@
-# RU->PL Speech Translation (ASR Project)
+# ASR Project: Rosyjski -> Polski
 
-Simple and modular repository for comparing methods in:
-`Russian speech -> Polish translation`.
+Prosty szkielet projektu zaliczeniowego do porownania metod tlumaczenia mowy rosyjskiej na jezyk polski.
 
-Main architecture:
-`ASR (RU) -> Russian text normalization/tokenization -> MT (RU->PL) -> optional TTS (PL)`.
+## Co jest celem tego repo
+- trzymanie kodu w `src/`,
+- jasny podzial etapow:
+1. ASR (rozpoznanie rosyjskiego z audio),
+2. obrobka tekstu rosyjskiego (normalizacja + wydzielenie slow),
+3. tlumaczenie RU -> PL,
+4. opcjonalnie TTS,
+5. porownanie metod i metryki.
 
-## Project goal
-Compare approaches on the same dataset of Russian tongue twisters:
-1. Cascade approach (ASR + MT + optional TTS).
-2. Integrated speech translation approach (speech-to-text translation).
+To repo jest celowo szkieletem, a nie gotowa implementacja modeli.
 
-## Repository structure
+## Struktura
 ```text
 .
 |-- data/
-|   |-- metadata/              # Manifest CSV files
-|   |-- raw/                   # Raw audio (not tracked)
-|   |-- interim/               # Temporary artifacts (not tracked)
-|   `-- processed/             # Processed artifacts (not tracked)
+|   `-- raw/                   # surowe nagrania
 |-- reports/
-|   |-- figures/
-|   |-- tables/
-|   `-- results/               # CSV outputs from benchmarks
+|   `-- results/               # wyniki porownan (csv, notatki)
 |-- src/ru_pl_st/
-|   |-- asr/                   # Russian ASR methods
-|   |-- text/                  # Russian text cleanup + token extraction
-|   |-- translation/           # RU->PL translation methods
-|   |-- tts/                   # TTS interfaces
-|   |-- pipelines/             # Cascade / integrated pipelines
-|   |-- comparison/            # Method comparison runners
-|   |-- metrics/               # WER, CER, BLEU, chrF
-|   |-- data/                  # Manifest loading and data models
-|   |-- utils/
-|   `-- cli.py                 # Main CLI entrypoint
-`-- opis_projektu_asr.md
+|   |-- asr.py                 # interfejs ASR + szkielety adapterow
+|   |-- text_processing.py     # normalizacja RU + tokenizacja (TODO)
+|   |-- translation.py         # interfejs tlumaczenia + szkielety
+|   |-- tts.py                 # interfejs TTS (opcjonalny etap)
+|   |-- pipeline.py            # szkielet pipeline kaskadowego / zintegrowanego
+|   |-- evaluation.py          # szkielety metryk i porownania
+|   |-- io.py                  # proste operacje wejscia/wyjscia
+|   |-- types.py               # modele danych
+|   `-- cli.py                 # proste CLI projektu
+|-- opis_projektu_asr.md
+`-- pyproject.toml
 ```
 
-## Install
+## Instalacja
 ```bash
 python -m venv .venv
 # Windows PowerShell:
@@ -45,41 +42,17 @@ python -m venv .venv
 pip install -e .
 ```
 
-## CLI usage
-Create manifest template:
+## Uruchamianie (szkielet)
 ```bash
-ru-pl-st make-manifest-template --output data/metadata/manifest_template.csv
+ru-pl-st run-cascade --raw-dir data/raw
+ru-pl-st run-integrated --raw-dir data/raw
+ru-pl-st compare --results-file reports/results/example.csv
 ```
 
-Run cascade comparison:
-```bash
-ru-pl-st run-cascade --manifest data/metadata/manifest.csv
-```
+Polecenia nie uruchamiaja jeszcze prawdziwych modeli - pokazuja tylko szkielet przeplywu.
 
-Run integrated comparison:
-```bash
-ru-pl-st run-integrated --manifest data/metadata/manifest.csv
-```
-
-Run full comparison (cascade + integrated):
-```bash
-ru-pl-st run-full-comparison --manifest data/metadata/manifest.csv
-```
-
-## Available built-in method names
-ASR:
-- `reference_asr`
-- `whisper_ru_sim`
-- `vosk_ru_sim`
-
-Translation:
-- `reference_mt`
-- `nllb_ru_pl_sim`
-- `marian_ru_pl_sim`
-
-Integrated:
-- `integrated_reference`
-- `integrated_s2tt_sim`
-
-Simulated methods are placeholders to let you benchmark pipeline logic immediately.
-Real model wrappers can be added in `src/ru_pl_st/asr/methods.py` and `src/ru_pl_st/translation/methods.py`.
+## Co dopisac dalej
+1. Adaptery do realnych modeli ASR (np. Whisper/Vosk).
+2. Konkretna implementacja obrobki tekstu rosyjskiego.
+3. Adaptery tlumaczenia (np. Marian/NLLB/inne).
+4. Faktyczne metryki i raport porownawczy.

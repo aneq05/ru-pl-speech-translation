@@ -4,15 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ru-pl-speech-translation"
-version = "0.2.0"
-description = "ASR course project: RU speech to PL translation comparison."
+version = "0.3.0"
+description = "Skeleton for RU->PL speech translation course project."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-  "pandas>=2.2",
-  "jiwer>=3.0",
-  "sacrebleu>=2.4",
-]
+dependencies = []
 
 [project.scripts]
 ru-pl-st = "ru_pl_st.cli:main"

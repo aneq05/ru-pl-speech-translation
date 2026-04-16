@@ -29,13 +29,9 @@ dist/
 # Logs
 *.log
 
-# Data artifacts (keep folder structure only)
+# Data artifacts
 data/raw/*
-data/interim/*
-data/processed/*
 !data/raw/.gitkeep
-!data/interim/.gitkeep
-!data/processed/.gitkeep
 
 # Benchmark outputs
 reports/results/*
