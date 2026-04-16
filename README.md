@@ -1,40 +1,40 @@
-# ASR Project: Rosyjski -> Polski
+# ASR Project: Russian -> Polish
 
-Prosty szkielet projektu zaliczeniowego do porownania metod tlumaczenia mowy rosyjskiej na jezyk polski.
+A simple course-project skeleton for comparing methods of Russian speech translation into Polish.
 
-## Co jest celem tego repo
-- trzymanie kodu w `src/`,
-- jasny podzial etapow:
-1. ASR (rozpoznanie rosyjskiego z audio),
-2. obrobka tekstu rosyjskiego (normalizacja + wydzielenie slow),
-3. tlumaczenie RU -> PL,
-4. opcjonalnie TTS,
-5. porownanie metod i metryki.
+## Repository goal
+- keep all code in `src/`,
+- keep a clear stage-by-stage architecture:
+1. ASR (recognize Russian from audio),
+2. Russian text processing (normalization + word extraction),
+3. RU -> PL translation,
+4. optional TTS,
+5. method comparison and metrics.
 
-To repo jest celowo szkieletem, a nie gotowa implementacja modeli.
+This repository is intentionally a skeleton, not a full model implementation.
 
-## Struktura
+## Structure
 ```text
 .
 |-- data/
-|   `-- raw/                   # surowe nagrania
+|   `-- raw/                   # raw recordings
 |-- reports/
-|   `-- results/               # wyniki porownan (csv, notatki)
+|   `-- results/               # comparison outputs (csv, notes)
 |-- src/ru_pl_st/
-|   |-- asr.py                 # interfejs ASR + szkielety adapterow
-|   |-- text_processing.py     # normalizacja RU + tokenizacja (TODO)
-|   |-- translation.py         # interfejs tlumaczenia + szkielety
-|   |-- tts.py                 # interfejs TTS (opcjonalny etap)
-|   |-- pipeline.py            # szkielet pipeline kaskadowego / zintegrowanego
-|   |-- evaluation.py          # szkielety metryk i porownania
-|   |-- io.py                  # proste operacje wejscia/wyjscia
-|   |-- types.py               # modele danych
-|   `-- cli.py                 # proste CLI projektu
+|   |-- asr.py                 # ASR interfaces + adapter skeletons
+|   |-- text_processing.py     # RU normalization + tokenization (TODO)
+|   |-- translation.py         # translation interfaces + skeletons
+|   |-- tts.py                 # TTS interface (optional stage)
+|   |-- pipeline.py            # cascade / integrated pipeline skeleton
+|   |-- evaluation.py          # metric and comparison skeleton
+|   |-- io.py                  # simple input/output helpers
+|   |-- types.py               # data models
+|   `-- cli.py                 # simple project CLI
 |-- opis_projektu_asr.md
 `-- pyproject.toml
 ```
 
-## Instalacja
+## Installation
 ```bash
 python -m venv .venv
 # Windows PowerShell:
@@ -42,17 +42,17 @@ python -m venv .venv
 pip install -e .
 ```
 
-## Uruchamianie (szkielet)
+## Run (skeleton)
 ```bash
 ru-pl-st run-cascade --raw-dir data/raw
 ru-pl-st run-integrated --raw-dir data/raw
 ru-pl-st compare --results-file reports/results/example.csv
 ```
 
-Polecenia nie uruchamiaja jeszcze prawdziwych modeli - pokazuja tylko szkielet przeplywu.
+These commands do not run real models yet; they only demonstrate the project flow skeleton.
 
-## Co dopisac dalej
-1. Adaptery do realnych modeli ASR (np. Whisper/Vosk).
-2. Konkretna implementacja obrobki tekstu rosyjskiego.
-3. Adaptery tlumaczenia (np. Marian/NLLB/inne).
-4. Faktyczne metryki i raport porownawczy.
+## Suggested next steps
+1. Add adapters for real ASR models (for example Whisper/Vosk).
+2. Implement concrete Russian text processing.
+3. Add translation adapters (for example Marian/NLLB/other).
+4. Implement actual metrics and a final comparison report.

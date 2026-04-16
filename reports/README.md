@@ -1,4 +1,4 @@
 # Reports
 
-Wyniki i podsumowania eksperymentow:
-- `results/` (pliki CSV, notatki, porównania metod, wykresy, tabele itd.)
+Experiment outputs and summaries:
+- `results/` (CSV files, notes, method comparisons, plots, tables, etc.)
