@@ -1,4 +1,4 @@
 # Reports
 
 Wyniki i podsumowania eksperymentow:
-- `results/` (pliki CSV, notatki, porownania metod)
+- `results/` (pliki CSV, notatki, porównania metod, wykresy, tabele itd.)
