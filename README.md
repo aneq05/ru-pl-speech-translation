@@ -106,7 +106,7 @@ models:
 
 ## Dataset format
 
-Put audio in `data/raw/` (`.wav` recommended for benchmark) and provide references in one of these formats:
+Put audio in `data/raw/` (`.wav` only in current benchmark loader) and provide references in one of these formats:
 
 ### Option A: `labels.csv`
 
@@ -127,6 +127,14 @@ person1/carl.wav,Shla Sasha po shosse i sosala sushku.
 
 - `twister_01.wav`
 - `twister_01.txt` (reference sentence)
+
+### Option C: reference library (filename mapping)
+
+- `data/reference_texts/ru/*.txt` - Russian originals
+- `data/reference_texts/pl/*.txt` - Polish reference translations
+- `data/reference_texts/audio_key_map.json` - mapping from normalized audio filename to reference id
+
+For your current dataset, `data/raw/labels.csv` and `data/reference_texts/` are already prepared.
 
 ## Benchmark outputs
 

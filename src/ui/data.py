@@ -1,10 +1,10 @@
 ﻿from __future__ import annotations
 
 import csv
-import re
 from pathlib import Path
 from typing import Any
 
+from reference_texts import get_reference_by_file_name
 
 MIC = "\U0001F399\ufe0f"
 BUBBLE = "\U0001FAE7"
@@ -14,28 +14,10 @@ HEART = "\U0001F497"
 
 
 DEFAULT_REFERENCE = {
+    "title": "Shla Sasha po shosse",
     "original": "\u0428\u043b\u0430 \u0421\u0430\u0448\u0430 \u043f\u043e \u0448\u043e\u0441\u0441\u0435 \u0438 \u0441\u043e\u0441\u0430\u043b\u0430 \u0441\u0443\u0448\u043a\u0443.",
     "polish": "Sz\u0142a Sasza po szosie i ssa\u0142a suszk\u0119.",
 }
-
-
-REFERENCE_BY_KEYWORD = [
-    {
-        "keywords": ["tongue_twister_demo", "shla_sasha", "sasha", "shosse"],
-        "original": "\u0428\u043b\u0430 \u0421\u0430\u0448\u0430 \u043f\u043e \u0448\u043e\u0441\u0441\u0435 \u0438 \u0441\u043e\u0441\u0430\u043b\u0430 \u0441\u0443\u0448\u043a\u0443.",
-        "polish": "Sz\u0142a Sasza po szosie i ssa\u0142a suszk\u0119.",
-    },
-    {
-        "keywords": ["greka", "reku", "rak"],
-        "original": "\u0415\u0445\u0430\u043b \u0413\u0440\u0435\u043a\u0430 \u0447\u0435\u0440\u0435\u0437 \u0440\u0435\u043a\u0443, \u0432\u0438\u0434\u0438\u0442 \u0413\u0440\u0435\u043a\u0430 \u2014 \u0432 \u0440\u0435\u043a\u0435 \u0440\u0430\u043a.",
-        "polish": "Jechal Greka przez rzeke, widzi Greka: w rzece rak.",
-    },
-    {
-        "keywords": ["drova", "trava", "dvor"],
-        "original": "\u041d\u0430 \u0434\u0432\u043e\u0440\u0435 \u0442\u0440\u0430\u0432\u0430, \u043d\u0430 \u0442\u0440\u0430\u0432\u0435 \u0434\u0440\u043e\u0432\u0430.",
-        "polish": "Na podworzu trawa, na trawie drewno.",
-    },
-]
 
 
 def build_demo_payload() -> dict[str, Any]:
@@ -101,15 +83,16 @@ def get_tongue_twister_reference(file_name: str | None) -> dict[str, str]:
     if not file_name:
         return DEFAULT_REFERENCE
 
-    normalized = _normalize_file_name(file_name)
-    for entry in REFERENCE_BY_KEYWORD:
-        if any(keyword in normalized for keyword in entry["keywords"]):
-            return {
-                "original": entry["original"],
-                "polish": entry["polish"],
-            }
+    entry = get_reference_by_file_name(file_name)
+    if entry is not None:
+        return {
+            "title": entry.title,
+            "original": entry.russian_original,
+            "polish": entry.polish_translation,
+        }
 
     return {
+        "title": "Unknown reference",
         "original": f"No matched reference for filename: {Path(file_name).name}",
         "polish": "No matched Polish translation.",
     }
@@ -151,11 +134,6 @@ def get_plot_paths(run_dir: Path) -> list[Path]:
     paths = [path for path in plots_dir.iterdir() if path.is_file() and path.suffix.lower() in supported_suffixes]
     paths.sort()
     return paths
-
-
-def _normalize_file_name(file_name: str) -> str:
-    stem = Path(file_name).stem.lower()
-    return re.sub(r"[^a-z0-9]+", "_", stem).strip("_")
 
 
 def _convert_row_types(row: dict[str, str]) -> dict[str, Any]:

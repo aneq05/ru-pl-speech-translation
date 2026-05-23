@@ -6,6 +6,7 @@ from pathlib import Path
 import soundfile as sf
 
 from benchmarking.types import AudioSample
+from reference_texts import get_reference_by_file_name
 
 # Current dataset contract: only WAV files are expected in data/raw.
 AUDIO_EXTENSIONS = {".wav"}
@@ -47,6 +48,7 @@ def load_dataset(raw_dir: str | Path) -> list[AudioSample]:
             "1) data/raw/labels.csv with columns: file_name,reference_text\n"
             "   For your current folder layout use relative file paths in file_name, e.g. person1/carl.wav\n"
             "2) sidecar .txt files next to every .wav file.\n"
+            "3) data/reference_texts/ mapping for filename-based automatic references.\n"
             "Detected WAV files (examples):\n"
             f"{expected_examples}"
         )
@@ -71,6 +73,7 @@ def _build_sample(
         reference_map.get(relative_path)
         or reference_map.get(file_name)
         or _read_sidecar_reference(audio_path)
+        or _read_reference_from_catalog(audio_path=audio_path, base_dir=base_dir)
     )
     if reference_text is None:
         return None
@@ -142,6 +145,22 @@ def _read_sidecar_reference(audio_path: Path) -> str | None:
         return None
     text = sidecar_path.read_text(encoding="utf-8").strip()
     return text or None
+
+
+def _read_reference_from_catalog(audio_path: Path, base_dir: Path) -> str | None:
+    candidate_names = [audio_path.name, audio_path.relative_to(base_dir).as_posix()]
+    for candidate in candidate_names:
+        try:
+            entry = get_reference_by_file_name(candidate)
+        except (FileNotFoundError, ValueError):
+            return None
+
+        if entry is not None:
+            text = entry.russian_original.strip()
+            if text:
+                return text
+
+    return None
 
 
 def _read_audio_duration(audio_path: Path) -> float:

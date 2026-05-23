@@ -148,20 +148,24 @@ def render_comparison_dashboard(
 
 def render_reference_panel(reference: dict[str, str], file_name: str | None) -> None:
     source_name = "No file selected" if file_name is None else escape(file_name)
+    title = escape(reference.get("title", "Unknown reference"))
+    original = escape(reference.get("original", ""))
+    polish = escape(reference.get("polish", ""))
 
     _html(
         f"""
         <section class="section-panel center-stage">
             <h2 class="section-title">Original Tongue Twister</h2>
             <p class="section-subtitle">Source: {source_name}</p>
+            <p class="section-subtitle">Title: {title}</p>
             <div class="reference-grid">
                 <article class="reference-card">
                     <span>Russian original</span>
-                    <h3>{reference['original']}</h3>
+                    <h3>{original}</h3>
                 </article>
                 <article class="reference-card">
                     <span>Polish translation</span>
-                    <h3>{reference['polish']}</h3>
+                    <h3>{polish}</h3>
                 </article>
             </div>
         </section>

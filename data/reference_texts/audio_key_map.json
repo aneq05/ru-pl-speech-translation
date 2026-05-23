@@ -1,0 +1,23 @@
+{
+  "audio_key_to_reference_id": {
+    "carl": "carl",
+    "salo": "salo",
+    "sasha": "sasha",
+    "shishkosushylnia": "shishkosushylnia",
+    "shishkosushylnia_wav": "shishkosushylnia",
+    "shiskosuszylnaja": "shishkosushylnia",
+    "shyskosushenieje": "shishkosushylnia",
+    "skorogovorun": "skorogovorun",
+    "tri_kitajca": "tri_kitajca",
+    "person3": "mixed_set"
+  },
+  "titles": {
+    "carl": "Karl i Klara",
+    "salo": "Slava i salo",
+    "sasha": "Shla Sasha po shosse",
+    "shishkosushylnia": "Shishkosushylnia",
+    "skorogovorun": "Skorogovorun",
+    "tri_kitajca": "Tri kitajca",
+    "mixed_set": "Nagranie zbiorcze"
+  }
+}
