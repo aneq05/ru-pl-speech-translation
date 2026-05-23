@@ -1,6 +1,5 @@
-import streamlit as st
-from pathlib import Path
+from ui.page import run_app
 
-st.set_page_config(
-    
-)
+
+if __name__ == "__main__":
+    run_app()

@@ -2,3 +2,10 @@ streamlit
 numpy
 soundfile
 librosa
+matplotlib
+
+# Optional ASR backends for benchmark:
+# openai-whisper
+# faster-whisper
+# transformers
+# torch
