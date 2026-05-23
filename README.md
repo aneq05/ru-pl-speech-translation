@@ -165,14 +165,6 @@ Optional dependencies for full benchmark:
 - `transformers`
 - `torch`
 
-## Final integration note
-
-To complete production `Analysis` mode, replace demo payload usage in `src/ui/page.py` (`build_demo_payload()`) with a real inference + translation backend call that returns:
-- recognized word segments,
-- transcript,
-- translation,
-- confidence metadata.
-
 ## Data link
 
 https://drive.google.com/drive/u/0/folders/1YfVdSFDDbJO21MES5UfFM7B1O_qED0Ko?pli=1&sort=13&direction=a
