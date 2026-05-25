@@ -1,95 +1,81 @@
 # ASR Project: Russian -> Polish Tongue Twisters
 
-This repository contains a full benchmark pipeline and a Streamlit UI for a Russian speech recognition + Polish translation project.
+This repository contains:
+- a Streamlit app (`Analysis` + `Model Comparison` modes),
+- a benchmark pipeline for ASR model comparison on Russian tongue-twister recordings,
+- reference text mapping (Russian originals + Polish reference translations).
 
-## Project goal
+## Current status
 
-Build an end-to-end ASR workflow for Russian tongue twisters:
-1. Upload audio.
-2. Recognize Russian words and transcript.
-3. Translate transcript to Polish.
-4. Compare multiple ASR models on your dataset and select the best one.
+- `Model Comparison` is connected to real benchmark execution.
+- `Analysis` UI flow is implemented, but the ASR/translation payload is still demo/mock data.
+- Benchmark model execution is sequential (one model at a time) to reduce memory pressure.
 
-## Current implementation status
+## Quick start
 
-- `Model Comparison` mode is fully connected to the benchmark pipeline.
-- `Analysis` mode currently shows the final UI/UX flow with a demo payload (placeholder for backend inference output).
-- The app structure is ready to swap demo payload with real backend model output.
+### 1) Environment
 
-## Repository structure
+```bash
+python -m venv .venv
+# Windows PowerShell:
+# .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
 
-- `data/raw/` - dataset audio + references used for benchmark.
-- `reports/results/` - benchmark outputs (CSV + plots), grouped per run.
-- `src/ui/` - Streamlit UI modules.
-- `src/benchmarking/` - benchmark pipeline (dataset, models, metrics, reporting).
-- `configs/models.yaml` - default model list for benchmark.
+`requirements.txt` includes UI and plotting dependencies.
 
-## UI overview (final product behavior)
+For real ASR benchmark runs with default models, install backends:
 
-Run the app:
+```bash
+pip install openai-whisper transformers torch
+```
+
+### 2) Run Streamlit app
 
 ```bash
 streamlit run src/app.py
 ```
 
-The UI has 2 modes:
+Modes:
+- `Analysis`
+  - upload `.wav`,
+  - show waveform,
+  - show matched reference text by filename (if found),
+  - display demo transcript/translation payload.
+- `Model Comparison`
+  - click `Run benchmark on dataset`,
+  - run benchmark on `data/raw`,
+  - display leaderboard, interactive Plotly charts, and saved PNG charts.
 
-### 1) Analysis
+### 3) Run benchmark from CLI
 
-Purpose: single recording analysis.
-
-Final intended flow:
-1. User uploads one recording.
-2. App loads matching tongue twister reference (original + Polish reference translation) based on filename.
-3. App shows audio player + waveform.
-4. App returns:
-   - recognized Russian words,
-   - ASR transcript,
-   - Polish translation,
-   - processing flow status.
-
-Current status:
-- UI is final.
-- Inference call is still mocked with demo payload.
-
-### 2) Model Comparison
-
-Purpose: evaluate and compare multiple ASR models on your dataset.
-
-How it works:
-1. Click `Run benchmark on dataset` in sidebar.
-2. Benchmark runs on `data/raw/` using models from `configs/models.yaml` (or defaults).
-3. New run is saved in `reports/results/run_<timestamp>/`.
-4. UI loads the latest run and displays:
-   - leaderboard table,
-   - interactive Plotly charts in dark pink theme,
-   - saved benchmark image charts.
-
-## Benchmark CLI
-
-You can also run benchmark outside UI.
-
-### Default run
+Default:
 
 ```bash
 python main.py benchmark --data-dir data/raw
 ```
 
-### Override model list
+Single-model smoke test:
+
+```bash
+python main.py benchmark --data-dir data/raw --models whisper:tiny
+```
+
+Explicit 4-model comparison:
 
 ```bash
 python main.py benchmark --data-dir data/raw --models whisper:tiny whisper:base whisper:small hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian
 ```
 
-### Use custom models config
+Custom output directory:
 
 ```bash
-python main.py benchmark --data-dir data/raw --models-config configs/models.yaml
+python main.py benchmark --data-dir data/raw --reports-dir reports/results
 ```
 
-## Benchmark model config
+## Default models
 
-`configs/models.yaml`
+From `configs/models.yaml` / built-in fallback:
 
 ```yaml
 models:
@@ -99,66 +85,72 @@ models:
   - hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian
 ```
 
-## Dataset format
+Model id formats:
+- `whisper:<size>`
+- `hf:<huggingface_model_id>`
 
-Put audio in `data/raw/` (`.wav` only in current benchmark loader) and provide references in one of these formats:
+## Dataset contract (current loader)
 
-### Option A: `labels.csv`
+- Audio format: `.wav` only (recursive scan under `data/raw`).
+- If a file has no reference text, it is skipped.
+- At least one valid `(audio + reference)` sample is required.
 
-File: `data/raw/labels.csv`
+Reference sources (priority):
+1. `labels.csv` / `references.csv` / `metadata.csv` in dataset root (`data/raw`) with file and text columns.
+2. Sidecar `.txt` file next to `.wav`.
+3. `data/reference_texts` catalog mapping by normalized filename key.
+
+Example `labels.csv` row:
 
 ```csv
 file_name,reference_text
-twister_01.wav,Shla Sasha po shosse i sosala sushku.
-```
-
-For nested layout like `data/raw/person1/carl.wav`, use relative path in `file_name`, for example:
-
-```csv
 person1/carl.wav,Shla Sasha po shosse i sosala sushku.
 ```
 
-### Option B: sidecar text file
+## Reference text catalog
 
-- `twister_01.wav`
-- `twister_01.txt` (reference sentence)
+Folder: `data/reference_texts/`
 
-### Option C: reference library (filename mapping)
+- `ru/<id>.txt` - Russian original
+- `pl/<id>.txt` - Polish reference translation
+- `audio_key_map.json` - filename-key to reference-id mapping
 
-- `data/reference_texts/ru/*.txt` - Russian originals
-- `data/reference_texts/pl/*.txt` - Polish reference translations
-- `data/reference_texts/audio_key_map.json` - mapping from normalized audio filename to reference id
+Used by:
+- benchmark dataset loader (fallback reference source),
+- Streamlit reference panel in `Analysis` mode.
 
-For your current dataset, `data/raw/labels.csv` and `data/reference_texts/` are already prepared.
+## Output directories
 
-## Benchmark outputs
+CLI benchmark output (default):
+- `reports/results/run_<timestamp>/`
 
-Each run creates:
+Streamlit `Model Comparison` output:
+- `src/ui/model_comparison/results/run_<timestamp>/`
 
-`reports/results/run_<timestamp>/`
+Each run contains:
+- `detailed_results.csv`
+- `leaderboard.csv`
+- `plots/01_overview_metrics.png`
+- `plots/02_quality_vs_speed.png`
+- `plots/03_wer_boxplot.png`
+- `plots/04_model_heatmap.png`
 
-- `detailed_results.csv` - per sample and model.
-- `leaderboard.csv` - aggregated metrics per model.
-- `plots/`
-  - `01_overview_metrics.png`
-  - `02_quality_vs_speed.png`
-  - `03_wer_boxplot.png`
-  - `04_model_heatmap.png`
+## Repository layout
 
-## Installation
+- `src/app.py` - Streamlit entrypoint
+- `src/ui/` - UI components, styles, comparison charts
+- `src/benchmarking/` - dataset loading, model adapters, metrics, reporting, runner
+- `src/reference_texts.py` - reference catalog loader and filename normalization
+- `configs/models.yaml` - default benchmark model list
+- `data/raw/` - input audio + optional CSV labels
+- `data/reference_texts/` - canonical RU/PL reference texts
 
-```bash
-python -m venv .venv
-# Windows PowerShell:
-# .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
+## Notes
 
-Optional dependencies for full benchmark:
-- `openai-whisper`
-- `transformers`
-- `torch`
+- Local model caches are stored under `models_cache/` (`whisper` and `huggingface` subfolders).
+- First benchmark run can be much slower because models are downloaded.
+- Full 4-model run on CPU can take a long time for larger datasets.
 
 ## Data link
 
-https://drive.google.com/drive/u/0/folders/1YfVdSFDDbJO21MES5UfFM7B1O_qED0Ko?pli=1&sort=13&direction=a
+[Google Drive dataset folder](https://drive.google.com/drive/u/0/folders/1YfVdSFDDbJO21MES5UfFM7B1O_qED0Ko?pli=1&sort=13&direction=a)
