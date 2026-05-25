@@ -4,6 +4,9 @@ import math
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+import soundfile as sf
+
 from benchmarking.models.base import ASRModel, ASRModelUnavailableError
 from benchmarking.types import ASRPrediction, ASRSegment
 
@@ -20,6 +23,8 @@ class WhisperASRModel(ASRModel):
         super().__init__(model_id=model_id)
         self.language = language
         self.device = device
+        self.download_root = Path("models_cache/whisper")
+        self.download_root.mkdir(parents=True, exist_ok=True)
         try:
             import whisper
         except ImportError as exc:
@@ -27,11 +32,12 @@ class WhisperASRModel(ASRModel):
                 "Model whisper is unavailable. Install dependency with: pip install openai-whisper"
             ) from exc
 
-        self._model = whisper.load_model(model_size, device=device)
+        self._model = whisper.load_model(model_size, device=device, download_root=str(self.download_root))
 
     def transcribe(self, audio_path: Path) -> ASRPrediction:
+        audio_array = _load_audio_mono(audio_path, target_sampling_rate=16_000)
         result: dict[str, Any] = self._model.transcribe(
-            str(audio_path),
+            audio_array,
             task="transcribe",
             language=self.language,
             fp16=self.device != "cpu",
@@ -61,6 +67,29 @@ def _segments_from_whisper(items: list[dict[str, Any]]) -> list[ASRSegment]:
             )
         )
     return output
+
+
+def _load_audio_mono(audio_path: Path, target_sampling_rate: int) -> np.ndarray:
+    try:
+        signal, sampling_rate = sf.read(str(audio_path), dtype="float32", always_2d=False)
+    except RuntimeError as exc:
+        raise ASRModelUnavailableError(f"Cannot read audio file for Whisper: {audio_path}") from exc
+
+    waveform = np.asarray(signal, dtype=np.float32)
+    if waveform.ndim > 1:
+        waveform = waveform.mean(axis=1)
+
+    if int(sampling_rate) == target_sampling_rate:
+        return waveform
+
+    try:
+        import librosa
+    except ImportError as exc:
+        raise ASRModelUnavailableError(
+            "librosa is required to resample audio for Whisper models. Install with: pip install librosa"
+        ) from exc
+
+    return librosa.resample(waveform, orig_sr=int(sampling_rate), target_sr=target_sampling_rate).astype(np.float32)
 
 
 def _to_float(value: Any) -> float | None:

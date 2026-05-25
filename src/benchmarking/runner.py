@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -7,7 +8,8 @@ from pathlib import Path
 from benchmarking.config import DEFAULT_MODELS_CONFIG_PATH, load_model_ids_from_config
 from benchmarking.dataset import load_dataset
 from benchmarking.evaluator import evaluate_models
-from benchmarking.model_registry import DEFAULT_MODEL_IDS, create_models
+from benchmarking.model_registry import DEFAULT_MODEL_IDS, create_model
+from benchmarking.models import ASRModelUnavailableError
 from benchmarking.reporting import (
     build_leaderboard,
     generate_benchmark_plots,
@@ -41,14 +43,41 @@ def run_benchmark(
     run_dir.mkdir(parents=True, exist_ok=True)
 
     samples = load_dataset(raw_data_dir)
-    models, unavailable = create_models(selected_models, language=language, device=device)
+    rows = []
+    skipped_models: list[str] = []
+    evaluated_models_count = 0
 
-    if unavailable:
-        print("[benchmark] skipped unavailable models:")
-        for model_id in unavailable:
-            print(f"  - {model_id}")
+    for model_id in selected_models:
+        model = None
+        model_rows = None
+        try:
+            model = create_model(model_id, language=language, device=device)
+        except ASRModelUnavailableError as exc:
+            skipped_models.append(model_id)
+            print(f"[benchmark] skipped unavailable model: {model_id} ({exc})")
+            continue
+        except Exception as exc:
+            skipped_models.append(model_id)
+            print(f"[benchmark] skipped invalid model config: {model_id} ({exc})")
+            continue
 
-    rows = evaluate_models(run_id=run_id, models=models, samples=samples)
+        try:
+            model_rows = evaluate_models(run_id=run_id, models=[model], samples=samples)
+        except Exception as exc:
+            skipped_models.append(model_id)
+            print(f"[benchmark] failed model run: {model_id} ({exc})")
+        else:
+            rows.extend(model_rows)
+            evaluated_models_count += 1
+        finally:
+            _release_model_resources(model)
+
+    if not rows:
+        raise RuntimeError(
+            "None of requested models produced benchmark rows. "
+            f"Requested: {selected_models}. Skipped/failed: {skipped_models}."
+        )
+
     leaderboard = build_leaderboard(rows)
 
     detailed_csv = write_detailed_results_csv(rows, run_dir / "detailed_results.csv")
@@ -56,7 +85,7 @@ def run_benchmark(
     plot_paths = generate_benchmark_plots(leaderboard=leaderboard, rows=rows, output_dir=run_dir / "plots")
 
     print(f"[benchmark] samples: {len(samples)}")
-    print(f"[benchmark] models evaluated: {len(models)}")
+    print(f"[benchmark] models evaluated: {evaluated_models_count}")
     print(f"[benchmark] detailed results: {detailed_csv}")
     print(f"[benchmark] leaderboard: {leaderboard_csv}")
     print(f"[benchmark] plots directory: {run_dir / 'plots'}")
@@ -67,7 +96,7 @@ def run_benchmark(
         detailed_csv=detailed_csv,
         leaderboard_csv=leaderboard_csv,
         plot_paths=plot_paths,
-        skipped_models=unavailable,
+        skipped_models=skipped_models,
     )
 
 
@@ -89,3 +118,36 @@ def _resolve_model_ids(
 
     print("[benchmark] using built-in default model list")
     return list(DEFAULT_MODEL_IDS)
+
+
+def _release_model_resources(model: object | None) -> None:
+    if model is None:
+        return
+
+    # Explicitly drop heavy references before gc.
+    for attr in ("_model", "_pipeline"):
+        if hasattr(model, attr):
+            setattr(model, attr, None)
+
+    del model
+    gc.collect()
+    _clear_torch_cache()
+
+
+def _clear_torch_cache() -> None:
+    try:
+        import torch
+    except ImportError:
+        return
+
+    if getattr(torch, "cuda", None) and torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        if hasattr(torch.cuda, "ipc_collect"):
+            torch.cuda.ipc_collect()
+
+    mps = getattr(torch, "mps", None)
+    if mps is not None and hasattr(mps, "empty_cache"):
+        try:
+            mps.empty_cache()
+        except Exception:
+            pass

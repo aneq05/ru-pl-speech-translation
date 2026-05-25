@@ -125,6 +125,20 @@ def load_leaderboard_rows(run_dir: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def load_detailed_rows(run_dir: Path) -> list[dict[str, Any]]:
+    csv_path = run_dir / "detailed_results.csv"
+    if not csv_path.exists():
+        return []
+
+    rows: list[dict[str, Any]] = []
+    with csv_path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            rows.append(_convert_row_types(row))
+
+    return rows
+
+
 def get_plot_paths(run_dir: Path) -> list[Path]:
     plots_dir = run_dir / "plots"
     if not plots_dir.exists():

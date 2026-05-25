@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,8 @@ class HFTransformersASRModel(ASRModel):
         super().__init__(model_id=f"hf:{model_name}")
         self.model_name = model_name
         self.target_sampling_rate = 16_000
+        self.cache_root = Path("models_cache/huggingface")
+        _configure_hf_cache(self.cache_root)
 
         try:
             from transformers import pipeline
@@ -33,6 +36,7 @@ class HFTransformersASRModel(ASRModel):
                 task="automatic-speech-recognition",
                 model=model_name,
                 device=device_arg,
+                model_kwargs={"cache_dir": str((self.cache_root / "hub").resolve())},
             )
         except Exception as exc:
             raise ASRModelUnavailableError(
@@ -68,6 +72,21 @@ def _resolve_transformers_device(device: str) -> int:
     if normalized in {"cuda", "gpu"}:
         return 0
     return -1
+
+
+def _configure_hf_cache(cache_root: Path) -> None:
+    cache_root = cache_root.resolve()
+    hub_cache = cache_root / "hub"
+    transformers_cache = cache_root / "transformers"
+    assets_cache = cache_root / "assets"
+
+    for path in (cache_root, hub_cache, transformers_cache, assets_cache):
+        path.mkdir(parents=True, exist_ok=True)
+
+    os.environ.setdefault("HF_HOME", str(cache_root))
+    os.environ.setdefault("HF_HUB_CACHE", str(hub_cache))
+    os.environ.setdefault("TRANSFORMERS_CACHE", str(transformers_cache))
+    os.environ.setdefault("HF_ASSETS_CACHE", str(assets_cache))
 
 
 def _load_audio_mono(audio_path: Path, target_sampling_rate: int) -> np.ndarray:

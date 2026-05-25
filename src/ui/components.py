@@ -9,6 +9,7 @@ import numpy as np
 import soundfile as sf
 import streamlit as st
 
+from ui.model_comparison import render_model_comparison_charts
 from ui.types import SidebarState
 
 
@@ -68,7 +69,7 @@ def render_sidebar_controls() -> SidebarState:
         if mode == "Analysis":
             audio_file = st.file_uploader(
                 "Upload audio",
-                type=["wav", "mp3", "flac", "ogg"],
+                type=["wav"],
             )
             analyze_clicked = st.button(
                 "Run analysis",
@@ -107,6 +108,7 @@ def render_comparison_dashboard(
     run_id: str | None,
     run_dir: Path | None,
     leaderboard_rows: list[dict[str, Any]],
+    detailed_rows: list[dict[str, Any]],
     plot_paths: list[Path],
 ) -> None:
     _html(
@@ -133,13 +135,18 @@ def render_comparison_dashboard(
     if leaderboard_rows:
         st.markdown("#### Leaderboard")
         st.dataframe(leaderboard_rows, use_container_width=True, hide_index=True)
+        render_model_comparison_charts(
+            leaderboard_rows=leaderboard_rows,
+            detailed_rows=detailed_rows,
+        )
     else:
         _html("<div class='soft-box'>Leaderboard CSV is empty.</div>")
 
     if plot_paths:
-        st.markdown("#### Benchmark charts")
+        st.markdown("#### Saved benchmark image charts")
         for plot_path in plot_paths:
-            st.image(str(plot_path), caption=plot_path.name, use_container_width=True)
+            image_bytes = plot_path.read_bytes()
+            st.image(image_bytes, caption=plot_path.name, use_container_width=True)
     else:
         _html("<div class='soft-box'>No plot images found for this run.</div>")
 

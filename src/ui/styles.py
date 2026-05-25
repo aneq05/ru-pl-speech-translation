@@ -362,6 +362,20 @@ def inject_styles() -> None:
                 background: linear-gradient(90deg, #ff1493, #ff6fc9) !important;
             }
 
+            div[data-testid="stPlotlyChart"] > div {
+                border: 1px solid rgba(255, 20, 147, 0.28);
+                border-radius: 18px;
+                overflow: hidden;
+                box-shadow: inset 0 0 0 1px rgba(255, 20, 147, 0.08);
+            }
+
+            div[data-testid="stMetric"] {
+                border: 1px solid rgba(255, 20, 147, 0.3);
+                border-radius: 16px;
+                background: rgba(255, 20, 147, 0.1);
+                padding: 0.28rem 0.44rem;
+            }
+
             div[data-testid="stRadio"] label {
                 color: #ffe3f4;
             }

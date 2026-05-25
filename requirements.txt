@@ -3,9 +3,9 @@ numpy
 soundfile
 librosa
 matplotlib
+plotly
 
 # Optional ASR backends for benchmark:
 # openai-whisper
-# faster-whisper
 # transformers
 # torch

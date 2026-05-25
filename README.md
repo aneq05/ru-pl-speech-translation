@@ -62,7 +62,8 @@ How it works:
 3. New run is saved in `reports/results/run_<timestamp>/`.
 4. UI loads the latest run and displays:
    - leaderboard table,
-   - benchmark charts.
+   - interactive Plotly charts in dark pink theme,
+   - saved benchmark image charts.
 
 ## Benchmark CLI
 
@@ -77,7 +78,7 @@ python main.py benchmark --data-dir data/raw
 ### Override model list
 
 ```bash
-python main.py benchmark --data-dir data/raw --models whisper:base faster-whisper:base
+python main.py benchmark --data-dir data/raw --models whisper:tiny whisper:base whisper:small hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian
 ```
 
 ### Use custom models config
@@ -86,22 +87,16 @@ python main.py benchmark --data-dir data/raw --models whisper:base faster-whispe
 python main.py benchmark --data-dir data/raw --models-config configs/models.yaml
 ```
 
-### Smoke test without heavy ASR dependencies
-
-```bash
-python main.py benchmark --data-dir data/raw --models dummy:empty dummy:sidecar
-```
-
 ## Benchmark model config
 
 `configs/models.yaml`
 
 ```yaml
 models:
+  - whisper:tiny
+  - whisper:base
   - whisper:small
-  - faster-whisper:small
   - hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian
-  - hf:jonatasgrosman/wav2vec2-xls-r-1b-russian
 ```
 
 ## Dataset format
@@ -161,7 +156,6 @@ pip install -r requirements.txt
 
 Optional dependencies for full benchmark:
 - `openai-whisper`
-- `faster-whisper`
 - `transformers`
 - `torch`
 

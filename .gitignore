@@ -36,3 +36,10 @@ data/raw/*
 # Benchmark outputs
 reports/results/*
 !reports/results/.gitkeep
+
+# UI model comparison outputs
+src/ui/model_comparison/results/*
+!src/ui/model_comparison/results/.gitkeep
+
+# Local model caches
+models_cache/

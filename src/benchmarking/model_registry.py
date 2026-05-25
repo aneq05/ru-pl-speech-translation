@@ -3,22 +3,18 @@ from __future__ import annotations
 from benchmarking.models import (
     ASRModel,
     ASRModelUnavailableError,
-    EmptyASRModel,
-    FasterWhisperASRModel,
     HFTransformersASRModel,
-    SidecarASRModel,
     WhisperASRModel,
 )
 
 DEFAULT_MODEL_IDS = [
+    "whisper:tiny",
+    "whisper:base",
     "whisper:small",
-    "faster-whisper:small",
     "hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian",
-    "hf:jonatasgrosman/wav2vec2-xls-r-1b-russian",
 ]
 SUPPORTED_MODEL_HINT = (
-    "Supported formats: whisper:<size>, faster-whisper:<size>, hf:<huggingface_model_id>, "
-    "dummy:empty, dummy:sidecar."
+    "Supported formats: whisper:<size>, hf:<huggingface_model_id>."
 )
 
 
@@ -28,12 +24,6 @@ def create_model(
     language: str = "ru",
     device: str = "cpu",
 ) -> ASRModel:
-    if model_id == "dummy:empty":
-        return EmptyASRModel()
-
-    if model_id == "dummy:sidecar":
-        return SidecarASRModel()
-
     if model_id.startswith("hf:"):
         model_name = model_id.split(":", maxsplit=1)[1]
         return HFTransformersASRModel(model_name=model_name, device=device)
@@ -41,10 +31,6 @@ def create_model(
     if model_id.startswith("whisper:"):
         model_size = model_id.split(":", maxsplit=1)[1]
         return WhisperASRModel(model_size=model_size, language=language, device=device)
-
-    if model_id.startswith("faster-whisper:"):
-        model_size = model_id.split(":", maxsplit=1)[1]
-        return FasterWhisperASRModel(model_size=model_size, language=language, device=device)
 
     raise ValueError(f"Unknown model id '{model_id}'. {SUPPORTED_MODEL_HINT}")
 

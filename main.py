@@ -32,7 +32,7 @@ def _build_parser() -> argparse.ArgumentParser:
         nargs="+",
         default=None,
         help=(
-            "Model ids, e.g. whisper:small faster-whisper:small "
+            "Model ids, e.g. whisper:tiny whisper:small "
             "hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian"
         ),
     )

@@ -1,5 +1,6 @@
 ﻿from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import streamlit as st
@@ -20,10 +21,13 @@ from ui.data import (
     find_latest_benchmark_run,
     get_plot_paths,
     get_tongue_twister_reference,
+    load_detailed_rows,
     load_leaderboard_rows,
 )
 from ui.styles import configure_page, inject_styles
 from ui.types import SidebarState
+
+UI_COMPARISON_RUNS_DIR = Path("src/ui/model_comparison/results")
 
 
 def _init_session_state() -> None:
@@ -51,11 +55,17 @@ def _handle_actions(sidebar_state: SidebarState) -> None:
     if sidebar_state.run_comparison_clicked:
         with st.spinner("Running benchmark on your dataset..."):
             try:
-                artifacts = run_benchmark()
+                artifacts = run_benchmark(report_root_dir=UI_COMPARISON_RUNS_DIR)
             except Exception as exc:
                 st.session_state.comparison_message = f"Benchmark failed: {exc}"
             else:
-                st.session_state.comparison_message = f"Benchmark complete. Run: {artifacts.run_id}"
+                if artifacts.skipped_models:
+                    skipped = ", ".join(artifacts.skipped_models)
+                    st.session_state.comparison_message = (
+                        f"Benchmark complete. Run: {artifacts.run_id}. Skipped/failed models: {skipped}"
+                    )
+                else:
+                    st.session_state.comparison_message = f"Benchmark complete. Run: {artifacts.run_id}"
 
 
 def _render_message() -> None:
@@ -112,13 +122,18 @@ def _render_analysis_mode(sidebar_state: SidebarState, result: dict[str, Any] | 
 def _render_comparison_mode() -> None:
     _render_comparison_message()
 
-    latest_run_dir = find_latest_benchmark_run()
+    latest_run_dir = find_latest_benchmark_run(UI_COMPARISON_RUNS_DIR)
+    if latest_run_dir is None:
+        latest_run_dir = find_latest_benchmark_run()
+
     leaderboard_rows: list[dict[str, Any]] = []
+    detailed_rows: list[dict[str, Any]] = []
     plot_paths = []
     run_id = None
 
     if latest_run_dir is not None:
         leaderboard_rows = load_leaderboard_rows(latest_run_dir)
+        detailed_rows = load_detailed_rows(latest_run_dir)
         plot_paths = get_plot_paths(latest_run_dir)
         run_id = latest_run_dir.name.replace("run_", "", 1)
 
@@ -126,6 +141,7 @@ def _render_comparison_mode() -> None:
         run_id=run_id,
         run_dir=latest_run_dir,
         leaderboard_rows=leaderboard_rows,
+        detailed_rows=detailed_rows,
         plot_paths=plot_paths,
     )
 
