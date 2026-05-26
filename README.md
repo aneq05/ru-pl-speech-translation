@@ -8,8 +8,32 @@ This repository contains:
 ## Current status
 
 - `Model Comparison` is connected to real benchmark execution.
-- `Analysis` UI flow is implemented, but the ASR/translation payload is still demo/mock data.
+- `Analysis` runs real ASR with `whisper:base` on uploaded audio.
+- `Analysis` Polish output source:
+  - reference catalog translation (when filename matches `data/reference_texts/audio_key_map.json`),
+  - reference catalog translation matched by recognized Russian text similarity,
+  - RU->PL translation model fallback for new/unknown files.
 - Benchmark model execution is sequential (one model at a time) to reduce memory pressure.
+
+### Analysis UI (what you see after upload)
+
+- Waveform preview and audio player for the uploaded `.wav`.
+- Reference panel showing the Russian original and Polish reference (if a mapping exists).
+- Recognized Russian words displayed as a word stream with per-word confidence bars.
+- Full ASR transcript in a disabled text area.
+- Polish translation block showing the translation text and a caption with the translation source.
+- Word-by-word token preview of the Polish output (when available).
+
+### Translation fallback logic
+
+When a recording is analyzed the app resolves the Polish output in this order:
+1. Exact file-name match to the reference catalog (`reference_catalog`).
+2. Best match from reference texts by similarity of the recognized Russian text (`recognized_text_match`).
+3. RU->PL translation model (`model_translation`).
+4. If model loading or inference fails the app reports `translation_model_unavailable`.
+5. If ASR recognized some text but no translation is found, the app reports `missing_translation`.
+
+The similarity matching uses a combination of character SequenceMatcher and token-overlap (see `src/ui/analysis_engine.py`). Transliteration to ASCII is attempted to increase matching robustness.
 
 ## Quick start
 
@@ -22,13 +46,30 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-`requirements.txt` includes UI and plotting dependencies.
+`requirements.txt` includes UI and plotting dependencies. Core runtime requirements include:
 
-For real ASR benchmark runs with default models, install backends:
+- `streamlit`, `soundfile`, `numpy`, `plotly` (UI/visualization)
+- `openai-whisper` (ASR model adapter used by default `whisper:<size>` models)
+
+For model backends and the RU->PL translation fallback install:
 
 ```bash
-pip install openai-whisper transformers torch
+pip install openai-whisper transformers torch sentencepiece
 ```
+
+Note: `sentencepiece` is required by some Hugging Face translation tokenizers.
+
+Optional (recommended for stable HF auth in local runs/CI): create `.env` in repo root:
+
+```env
+HF_TOKEN=hf_xxx_your_read_token
+# Optional override for Analysis translation fallback model:
+# RU_PL_TRANSLATION_MODEL_ID=facebook/nllb-200-distilled-600M
+```
+
+`HF_TOKEN` is loaded automatically by both:
+- CLI (`python main.py ...`)
+- Streamlit app (`streamlit run src/app.py`)
 
 ### 2) Run Streamlit app
 
@@ -41,7 +82,8 @@ Modes:
   - upload `.wav`,
   - show waveform,
   - show matched reference text by filename (if found),
-  - display demo transcript/translation payload.
+  - run real transcription with `whisper:base`,
+  - show Polish output from reference translation, recognized-text match, or RU->PL model translation fallback.
 - `Model Comparison`
   - click `Run benchmark on dataset`,
   - run benchmark on `data/raw`,
@@ -59,6 +101,12 @@ Single-model smoke test:
 
 ```bash
 python main.py benchmark --data-dir data/raw --models whisper:tiny
+```
+
+HF model smoke test:
+
+```bash
+python main.py benchmark --data-dir data/raw --models hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian
 ```
 
 Explicit 4-model comparison:
@@ -95,6 +143,8 @@ Model id formats:
 - If a file has no reference text, it is skipped.
 - At least one valid `(audio + reference)` sample is required.
 
+If you want to analyze a single uploaded file that is not present in `data/raw`, the `Analysis` UI still runs ASR on the uploaded file and then attempts translation via the fallback logic (reference match → text-match → RU->PL model). If the translation model is unavailable, the UI will show an explanatory status message.
+
 Reference sources (priority):
 1. `labels.csv` / `references.csv` / `metadata.csv` in dataset root (`data/raw`) with file and text columns.
 2. Sidecar `.txt` file next to `.wav`.
@@ -118,6 +168,8 @@ Folder: `data/reference_texts/`
 Used by:
 - benchmark dataset loader (fallback reference source),
 - Streamlit reference panel in `Analysis` mode.
+
+You can add new canonical references by placing paired files in `data/reference_texts/ru` and `data/reference_texts/pl` and updating `audio_key_map.json` to map filenames (or keys) to reference IDs.
 
 ## Output directories
 
@@ -145,11 +197,25 @@ Each run contains:
 - `data/raw/` - input audio + optional CSV labels
 - `data/reference_texts/` - canonical RU/PL reference texts
 
+Key implementation files to inspect:
+
+- `src/ui/analysis_engine.py` - orchestrates ASR, temporary audio handling, reference lookup, similarity matching and translation fallback.
+- `src/ui/translation_engine.py` - RU->PL translation adapter using Hugging Face seq2seq models (configurable via `RU_PL_TRANSLATION_MODEL_ID`).
+- `src/ui/components.py` and `src/ui/page.py` - Streamlit rendering of the Analysis and Model Comparison UI and controls.
+
 ## Notes
 
 - Local model caches are stored under `models_cache/` (`whisper` and `huggingface` subfolders).
 - First benchmark run can be much slower because models are downloaded.
+- First `Analysis` translation fallback on unknown files can also be slow (RU->PL model download).
 - Full 4-model run on CPU can take a long time for larger datasets.
+
+## Troubleshooting & development tips
+
+- If the app shows `Translation model unavailable`, ensure `transformers`, `torch` and `sentencepiece` are installed and optionally set `HF_TOKEN` for private model access.
+- Local HF cache and downloaded models are stored under `models_cache/`. Pre-downloading models into this folder can speed up runs in air-gapped environments.
+- To run the Streamlit UI with a specific device, set `DEFAULT_DEVICE` in the app environment or configure CUDA/MPS availability for PyTorch.
+- Logs and intermediate benchmark outputs are under `reports/` and `src/ui/model_comparison/results/`.
 
 ## Data link
 

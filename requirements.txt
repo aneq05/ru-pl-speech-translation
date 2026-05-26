@@ -4,8 +4,10 @@ soundfile
 librosa
 matplotlib
 plotly
+unidecode
 
-# Optional ASR backends for benchmark:
+# Optional backends for ASR and RU->PL translation fallback:
 # openai-whisper
 # transformers
 # torch
+# sentencepiece

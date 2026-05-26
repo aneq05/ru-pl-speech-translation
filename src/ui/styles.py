@@ -352,6 +352,188 @@ def inject_styles() -> None:
             div[data-testid="stProgressBar"] > div > div > div {
                 background: linear-gradient(90deg, #ff1493, #ff6fc9) !important;
             }
+
+            div[data-testid="stPlotlyChart"] > div {
+                border: 1px solid rgba(255, 20, 147, 0.28);
+                border-radius: 18px;
+                overflow: hidden;
+                box-shadow: inset 0 0 0 1px rgba(255, 20, 147, 0.08);
+            }
+
+            div[data-testid="stMetric"] {
+                border: 1px solid rgba(255, 20, 147, 0.3);
+                border-radius: 16px;
+                background: rgba(255, 20, 147, 0.1);
+                padding: 0.28rem 0.44rem;
+            }
+
+            .winner-card {
+                border: 1px solid rgba(255, 20, 147, 0.52);
+                border-radius: 20px;
+                background: linear-gradient(160deg, rgba(255, 20, 147, 0.26), rgba(255, 20, 147, 0.08));
+                padding: 0.78rem 0.92rem;
+                margin: 0.35rem 0 0.65rem 0;
+                box-shadow: 0 10px 24px rgba(255, 20, 147, 0.2);
+            }
+
+            .winner-eyebrow {
+                font-size: 0.74rem;
+                color: #ffd4ec;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                font-weight: 700;
+            }
+
+            .winner-model {
+                margin-top: 0.25rem;
+                font-size: 1.08rem;
+                font-weight: 700;
+                color: #ffffff;
+                word-break: break-word;
+            }
+
+            .winner-metrics {
+                margin-top: 0.48rem;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.42rem;
+            }
+
+            .winner-metrics span {
+                border: 1px solid rgba(255, 20, 147, 0.5);
+                border-radius: 999px;
+                padding: 0.22rem 0.54rem;
+                font-size: 0.79rem;
+                color: #ffe8f6;
+                background: rgba(10, 10, 10, 0.52);
+                font-weight: 600;
+            }
+
+            .chart-launcher-card {
+                border: 1px solid rgba(255, 20, 147, 0.45);
+                border-radius: 18px;
+                background: rgba(255, 20, 147, 0.12);
+                padding: 0.62rem 0.74rem 0.56rem 0.74rem;
+                margin: 0.35rem 0 0.42rem 0;
+                box-shadow: inset 0 0 0 1px rgba(255, 20, 147, 0.14);
+            }
+
+            .chart-launcher-badge {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 30px;
+                height: 30px;
+                border-radius: 999px;
+                border: 1px solid rgba(255, 20, 147, 0.78);
+                background: rgba(255, 20, 147, 0.3);
+                color: #ffe8f7;
+                font-size: 0.78rem;
+                font-weight: 700;
+                margin-bottom: 0.38rem;
+            }
+
+            .chart-launcher-title {
+                color: #fff2fa;
+                font-size: 0.97rem;
+                font-weight: 700;
+                line-height: 1.25;
+            }
+
+            .chart-launcher-subtitle {
+                margin-top: 0.24rem;
+                color: #ffd2ea;
+                font-size: 0.82rem;
+                line-height: 1.28;
+            }
+
+            div[data-testid="stExpander"] {
+                border: 1px solid rgba(255, 20, 147, 0.45);
+                border-radius: 18px;
+                background: rgba(255, 20, 147, 0.07);
+                margin-bottom: 0.95rem;
+                overflow: hidden;
+            }
+
+            div[data-testid="stExpander"] details {
+                border: none;
+            }
+
+            div[data-testid="stExpander"] summary {
+                background: rgba(255, 20, 147, 0.12);
+                border-bottom: 1px solid rgba(255, 20, 147, 0.32);
+            }
+
+            div[data-testid="stExpander"] summary p {
+                color: #ffe8f6;
+                font-weight: 700;
+                font-size: 0.88rem;
+            }
+
+            .chart-preview-card {
+                border: 1px solid rgba(255, 20, 147, 0.28);
+                border-radius: 18px;
+                background: rgba(255, 20, 147, 0.06);
+                padding: 0.72rem;
+                margin: 0.6rem 0 0.95rem 0;
+            }
+
+            .chart-preview-link {
+                display: block;
+                text-decoration: none;
+            }
+
+            .chart-preview-image {
+                display: block;
+                width: 100%;
+                height: auto;
+                border-radius: 14px;
+                border: 1px solid rgba(255, 20, 147, 0.28);
+                transition: transform 0.16s ease, box-shadow 0.16s ease;
+            }
+
+            .chart-preview-image:hover {
+                transform: translateY(-1px) scale(1.01);
+                box-shadow: 0 10px 26px rgba(255, 20, 147, 0.26);
+            }
+
+            .chart-preview-caption {
+                margin-top: 0.48rem;
+                color: #ffeaf7;
+                font-weight: 700;
+                font-size: 0.92rem;
+            }
+
+            .chart-preview-hint {
+                margin-top: 0.16rem;
+                color: #ffc8e9;
+                font-size: 0.8rem;
+            }
+
+            div[data-testid="stRadio"] label {
+                color: #ffe3f4;
+            }
+
+            @media (max-width: 1100px) {
+                .reference-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            @media (max-width: 1000px) {
+                .section-panel {
+                    border-radius: 22px;
+                }
+
+                .app-hero {
+                    border-radius: 24px;
+                    padding: 1.25rem 1.1rem 1.1rem 1.1rem;
+                }
+
+                .wave-track {
+                    height: 130px;
+                }
+            }
         </style>
         """,
         unsafe_allow_html=True,

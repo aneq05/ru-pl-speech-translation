@@ -8,6 +8,7 @@ import numpy as np
 
 from benchmarking.models.base import ASRModel, ASRModelUnavailableError
 from benchmarking.types import ASRPrediction, ASRSegment
+from env_loader import load_env_file
 
 
 class HFTransformersASRModel(ASRModel):
@@ -21,7 +22,9 @@ class HFTransformersASRModel(ASRModel):
         self.model_name = model_name
         self.target_sampling_rate = 16_000
         self.cache_root = Path("models_cache/huggingface")
+        load_env_file()
         _configure_hf_cache(self.cache_root)
+        hf_token = _read_hf_token()
 
         try:
             from transformers import pipeline
@@ -29,29 +32,44 @@ class HFTransformersASRModel(ASRModel):
             raise ASRModelUnavailableError(
                 "Model hf:* is unavailable. Install dependency with: pip install transformers"
             ) from exc
+        _disable_broken_torchcodec_support()
 
         device_arg = _resolve_transformers_device(device=device)
+        pipeline_kwargs: dict[str, Any] = {
+            "task": "automatic-speech-recognition",
+            "model": model_name,
+            "device": device_arg,
+            "model_kwargs": {"cache_dir": str((self.cache_root / "hub").resolve())},
+        }
+        if hf_token:
+            pipeline_kwargs["token"] = hf_token
+
         try:
-            self._pipeline = pipeline(
-                task="automatic-speech-recognition",
-                model=model_name,
-                device=device_arg,
-                model_kwargs={"cache_dir": str((self.cache_root / "hub").resolve())},
-            )
+            self._pipeline = pipeline(**pipeline_kwargs)
+        except TypeError as exc:
+            if hf_token and "token" in str(exc):
+                pipeline_kwargs.pop("token", None)
+                pipeline_kwargs["use_auth_token"] = hf_token
+                self._pipeline = pipeline(**pipeline_kwargs)
+            else:
+                raise ASRModelUnavailableError(
+                    f"Could not initialize hf model '{model_name}'. Ensure dependencies are installed and model is reachable."
+                ) from exc
         except Exception as exc:
+            token_hint = (
+                " If this model requires auth, set HF_TOKEN in .env or system environment."
+                if hf_token is None
+                else ""
+            )
             raise ASRModelUnavailableError(
-                f"Could not initialize hf model '{model_name}'. Ensure dependencies are installed and model is reachable."
+                f"Could not initialize hf model '{model_name}'. Ensure dependencies are installed and model is reachable.{token_hint}"
             ) from exc
 
     def transcribe(self, audio_path: Path) -> ASRPrediction:
         audio_array = _load_audio_mono(audio_path=audio_path, target_sampling_rate=self.target_sampling_rate)
         payload = {"array": audio_array, "sampling_rate": self.target_sampling_rate}
 
-        # Some models/pipeline versions support timestamps, some don't.
-        try:
-            result = self._pipeline(payload, return_timestamps=True)
-        except TypeError:
-            result = self._pipeline(payload)
+        result = _run_pipeline_with_best_effort_timestamps(self._pipeline, payload)
 
         text = _extract_text(result)
         segments = _extract_segments(result)
@@ -87,6 +105,62 @@ def _configure_hf_cache(cache_root: Path) -> None:
     os.environ.setdefault("HF_HUB_CACHE", str(hub_cache))
     os.environ.setdefault("TRANSFORMERS_CACHE", str(transformers_cache))
     os.environ.setdefault("HF_ASSETS_CACHE", str(assets_cache))
+
+
+def _read_hf_token() -> str | None:
+    for key in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"):
+        value = os.getenv(key)
+        if value and value.strip():
+            token = value.strip()
+            os.environ.setdefault("HF_TOKEN", token)
+            return token
+    return None
+
+
+def _disable_broken_torchcodec_support() -> None:
+    try:
+        import torchcodec  # type: ignore  # noqa: F401
+    except Exception:
+        try:
+            from transformers.pipelines import automatic_speech_recognition as asr_pipeline
+        except Exception:
+            return
+
+        asr_pipeline.is_torchcodec_available = lambda: False
+
+
+def _run_pipeline_with_best_effort_timestamps(pipeline_obj: Any, payload: dict[str, Any]) -> Any:
+    # Keep timestamps when supported, but gracefully fallback for CTC/version differences.
+    attempts = (
+        {"return_timestamps": "word"},
+        {"return_timestamps": "char"},
+        {"return_timestamps": True},
+        {},
+    )
+
+    for kwargs in attempts:
+        try:
+            return pipeline_obj(payload, **kwargs)
+        except TypeError as exc:
+            if kwargs and _is_timestamp_type_error(exc):
+                continue
+            raise
+        except ValueError as exc:
+            if kwargs and _is_timestamp_mode_error(exc):
+                continue
+            raise
+
+    return pipeline_obj(payload)
+
+
+def _is_timestamp_mode_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return "return_timestamps" in message or "ctc can either predict character level timestamps" in message
+
+
+def _is_timestamp_type_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return "return_timestamps" in message and "unexpected keyword argument" in message
 
 
 def _load_audio_mono(audio_path: Path, target_sampling_rate: int) -> np.ndarray:

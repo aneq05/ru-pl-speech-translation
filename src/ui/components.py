@@ -1,5 +1,6 @@
 ﻿from __future__ import annotations
 
+import base64
 import io
 from html import escape
 from pathlib import Path
@@ -127,7 +128,8 @@ def render_comparison_dashboard(
         _html(
             """
             <div class="soft-box">
-                No benchmark results found yet. Click <strong>Run benchmark on dataset</strong> in the sidebar.
+                No benchmark results found yet. Run <strong>Run benchmark on dataset</strong> in this tab.
+                Note: <strong>Analysis</strong> mode does not generate comparison charts.
             </div>
             """
         )
@@ -149,8 +151,7 @@ def render_comparison_dashboard(
     if plot_paths:
         st.markdown("#### Saved benchmark image charts")
         for plot_path in plot_paths:
-            image_bytes = plot_path.read_bytes()
-            st.image(image_bytes, caption=plot_path.name, use_container_width=True)
+            _render_saved_chart_preview(plot_path)
     else:
         _html("<div class='soft-box'>No plot images found for this run.</div>")
 
@@ -326,7 +327,29 @@ def _render_translation_block(result: dict[str, Any] | None) -> None:
         _html("<div class='soft-box'>Waiting for translation result.</div>")
         return
 
+    source = str(result.get("translation_source", "")).strip()
+    if source == "reference_catalog":
+        st.caption("Source: reference catalog translation")
+    elif source == "recognized_text_match":
+        st.caption("Source: matched by recognized Russian text")
+    elif source == "model_translation":
+        st.caption("Source: RU->PL translation model")
+    elif source == "translation_model_unavailable":
+        st.caption("Source: translation model unavailable")
+    elif source == "missing_translation":
+        st.caption("Source: no translation could be generated")
+    elif source:
+        st.caption(f"Source: {source}")
+
     translation_text = result["translation"]
+    if source == "translation_model_unavailable":
+        _html(
+            "<div class='soft-box'>Translation model unavailable. Install `transformers`, `torch`, and "
+            "`sentencepiece`, then run analysis again.</div>"
+        )
+    if not translation_text.strip():
+        _html("<div class='soft-box'>No Polish translation available for this recording yet.</div>")
+
     st.text_area(
         "Polish translation",
         value=translation_text,
@@ -346,3 +369,22 @@ def _render_translation_block(result: dict[str, Any] | None) -> None:
         for column, token in zip(columns, row_items, strict=False):
             with column:
                 st.markdown(f"`{token}`")
+
+
+def _render_saved_chart_preview(plot_path: Path) -> None:
+    image_bytes = plot_path.read_bytes()
+    encoded = base64.b64encode(image_bytes).decode("ascii")
+    image_url = f"data:image/png;base64,{encoded}"
+    caption = escape(plot_path.name)
+
+    _html(
+        f"""
+        <div class="chart-preview-card">
+            <a class="chart-preview-link" href="{image_url}" target="_blank">
+                <img src="{image_url}" alt="{caption}" class="chart-preview-image" />
+            </a>
+            <div class="chart-preview-caption">{caption}</div>
+            <div class="chart-preview-hint">Click to open full-size chart</div>
+        </div>
+        """
+    )
