@@ -97,7 +97,7 @@ def inject_styles() -> None:
             .hero-title {
                 font-family: 'Montserrat', sans-serif !important;
                 margin: 0.5rem 0 0.2rem 0 !important;
-                font-size: 3.2rem !important; /* Huge size */
+                font-size: 2.6rem !important; /* Huge size */
                 font-weight: 800 !important;
                 line-height: 1.2 !important;
                 color: var(--white) !important;
@@ -107,7 +107,7 @@ def inject_styles() -> None:
             .section-title {
                 font-family: 'Montserrat', sans-serif !important;
                 margin: 0 !important;
-                font-size: 2.2rem !important; /* Large size */
+                font-size: 1.8rem !important; /* Large size */
                 font-weight: 700 !important;
                 color: var(--white) !important;
             }
@@ -197,11 +197,12 @@ def inject_styles() -> None:
                 border: none !important;
                 box-shadow: none !important;
                 color: var(--text-base) !important;
+                padding: 0 !important;  
+                margin: 0 !important;  
             }
 
-            /* Removes left padding for cleaner look */
-            div[data-testid="stAlert"] {
-                padding-left: 0 !important;
+            div[data-testid="stAlert"] > div {
+                gap: 0.5rem !important;
             }
             
             div[data-testid="stAlert"] svg {
