@@ -113,10 +113,13 @@ def _render_analysis_mode(sidebar_state: SidebarState, result: dict[str, Any] | 
     reference = get_tongue_twister_reference(reference_file_name)
 
     _render_message()
+    
+    # MOVED HERE: The flow track is now displayed immediately below the system message
+    render_flow_track(steps)
+
     render_reference_panel(reference, reference_file_name)
     render_audio_panel(sidebar_state.audio_file)
     render_recognition_and_translation(result)
-    render_flow_track(steps)
 
 
 def _render_comparison_mode() -> None:

@@ -54,10 +54,15 @@ def _extract_waveform(audio_file: Any, bars: int = 170) -> np.ndarray | None:
 
 def render_sidebar_controls() -> SidebarState:
     with st.sidebar:
-        st.markdown("## Control")
+        st.markdown("## 🎛️ Control Panel")
+
+        # Add an info block for better user context
+        st.info("Upload a Russian tongue twister audio to generate a transcript and a Polish translation.")
+        # Visual divider line
+        st.divider() 
 
         mode = st.radio(
-            "Mode",
+            "Select App Mode:",
             ["Analysis", "Model Comparison"],
             index=0,
         )
@@ -273,8 +278,14 @@ def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
     )
 
     _render_word_stream(result)
-    _render_transcript_block(result)
-    _render_translation_block(result)
+
+    # CREATE TWO COLUMNS FOR SIDE-BY-SIDE COMPARISON
+    col1, col2 = st.columns(2, gap="medium")
+    
+    with col1:
+        _render_transcript_block(result) 
+    with col2:
+        _render_translation_block(result)
 
     _html("</section>")
 
