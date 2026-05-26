@@ -54,11 +54,10 @@ def _extract_waveform(audio_file: Any, bars: int = 170) -> np.ndarray | None:
 
 def render_sidebar_controls() -> SidebarState:
     with st.sidebar:
-        st.markdown("## 🎛️ Control Panel")
+        st.markdown("## Control Panel")
 
         # Add an info block for better user context
         st.info("Upload a Russian tongue twister audio to generate a transcript and a Polish translation.")
-        # Visual divider line
         st.divider() 
 
         mode = st.radio(
@@ -102,7 +101,7 @@ def render_hero() -> None:
         """
         <section class="app-hero">
             <div class="eyebrow">Russian to Polish ASR</div>
-            <h1 class="hero-title">Tongue Twister Studio</h1>
+            <div class="hero-title">Tongue Twister Studio</div>
         </section>
         """
     )
@@ -119,7 +118,7 @@ def render_comparison_dashboard(
     _html(
         """
         <section class="section-panel center-stage">
-            <h2 class="section-title">Model Comparison</h2>
+            <div class="section-title">Model Comparison</div>
             <p class="section-subtitle">Comparative metrics and charts from your dataset benchmark runs.</p>
         """
     )
@@ -167,17 +166,17 @@ def render_reference_panel(reference: dict[str, str], file_name: str | None) -> 
     _html(
         f"""
         <section class="section-panel center-stage">
-            <h2 class="section-title">Original Tongue Twister</h2>
+            <div class="section-title">Original Tongue Twister</div>
             <p class="section-subtitle">Source: {source_name}</p>
             <p class="section-subtitle">Title: {title}</p>
             <div class="reference-grid">
                 <article class="reference-card">
                     <span>Russian original</span>
-                    <h3>{original}</h3>
+                    <div class="ref-text">{original}</div>
                 </article>
                 <article class="reference-card">
                     <span>Polish translation</span>
-                    <h3>{polish}</h3>
+                    <div class="ref-text">{polish}</div>
                 </article>
             </div>
         </section>
@@ -189,7 +188,7 @@ def render_audio_panel(audio_file: Any) -> None:
     _html(
         """
         <section class="section-panel center-stage audio-focus">
-            <h2 class="section-title">Audio and Waveform</h2>
+            <div class="section-title">Audio and Waveform</div>
         """
     )
 
@@ -219,7 +218,7 @@ def render_flow_track(steps: list[dict[str, str]]) -> None:
     _html(
         """
         <section class="section-panel center-stage">
-            <h2 class="section-title">Processing Flow</h2>
+            <div class="section-title">Processing Flow</div>
         """
     )
 
@@ -281,7 +280,6 @@ def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
 
     # CREATE TWO COLUMNS FOR SIDE-BY-SIDE COMPARISON
     col1, col2 = st.columns(2, gap="medium")
-    
     with col1:
         _render_transcript_block(result) 
     with col2:
@@ -291,7 +289,7 @@ def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
 
 
 def _render_word_stream(result: dict[str, Any] | None) -> None:
-    _html("<h3 class='result-title'>Recognized Russian words</h3>")
+    _html("<div class='result-title'>Recognized Russian words</div>")
 
     if result is None:
         _html("<div class='soft-box'>Waiting for analysis result.</div>")
@@ -312,7 +310,7 @@ def _render_word_stream(result: dict[str, Any] | None) -> None:
 
 
 def _render_transcript_block(result: dict[str, Any] | None) -> None:
-    _html("<h4 class='subsection-title'>Transcript</h4>")
+    _html("<div class='subsection-title'>Transcript</div>")
     transcript = "" if result is None else result["recognized_text"]
     st.text_area(
         "Transcript (ASR)",
@@ -323,7 +321,7 @@ def _render_transcript_block(result: dict[str, Any] | None) -> None:
 
 
 def _render_translation_block(result: dict[str, Any] | None) -> None:
-    _html("<h4 class='subsection-title'>Polish output</h4>")
+    _html("<div class='subsection-title'>Polish output</div>")
     if result is None:
         _html("<div class='soft-box'>Waiting for translation result.</div>")
         return

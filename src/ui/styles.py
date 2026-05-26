@@ -159,7 +159,7 @@ def inject_styles() -> None:
                 line-height: 1.3;
             }
 
-            .reference-card h3 {
+            .reference-card .ref-text{
                 font-family: 'Quicksand', sans-serif;
                 margin: 0;
                 font-size: 1rem;
