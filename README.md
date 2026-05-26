@@ -30,6 +30,16 @@ For real ASR benchmark runs with default models, install backends:
 pip install openai-whisper transformers torch
 ```
 
+Optional (recommended for stable HF auth in local runs/CI): create `.env` in repo root:
+
+```env
+HF_TOKEN=hf_xxx_your_read_token
+```
+
+`HF_TOKEN` is loaded automatically by both:
+- CLI (`python main.py ...`)
+- Streamlit app (`streamlit run src/app.py`)
+
 ### 2) Run Streamlit app
 
 ```bash
@@ -59,6 +69,12 @@ Single-model smoke test:
 
 ```bash
 python main.py benchmark --data-dir data/raw --models whisper:tiny
+```
+
+HF model smoke test:
+
+```bash
+python main.py benchmark --data-dir data/raw --models hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian
 ```
 
 Explicit 4-model comparison:

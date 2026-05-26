@@ -25,21 +25,22 @@ MODEL_COLORS = [
 
 def apply_dark_pink_theme(fig: Any, *, title: str, height: int = 430) -> Any:
     fig.update_layout(
-        title=dict(text=title, x=0.01, xanchor="left", font=dict(size=18, color=TEXT)),
+        title=dict(text=title, x=0.01, xanchor="left", y=0.98, yanchor="top", font=dict(size=18, color=TEXT)),
         height=height,
         paper_bgcolor=BG_CARD,
         plot_bgcolor=BG_PLOT,
         font=dict(family="Quicksand, Segoe UI, sans-serif", color=TEXT),
-        margin=dict(l=50, r=30, t=76, b=56),
+        margin=dict(l=58, r=34, t=112, b=86),
         legend=dict(
             bgcolor="rgba(0,0,0,0)",
             bordercolor=GRID,
             borderwidth=1,
             orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1.0,
+            yanchor="top",
+            y=1.16,
+            xanchor="left",
+            x=0.01,
+            font=dict(size=11, color=TEXT),
         ),
         hoverlabel=dict(
             bgcolor="rgba(25, 2, 16, 0.95)",
@@ -47,6 +48,13 @@ def apply_dark_pink_theme(fig: Any, *, title: str, height: int = 430) -> Any:
             font=dict(color=TEXT),
         ),
     )
-    fig.update_xaxes(showgrid=False, zeroline=False, linecolor=GRID, tickfont=dict(color=TEXT))
-    fig.update_yaxes(showgrid=True, gridcolor=GRID, zeroline=False, linecolor=GRID, tickfont=dict(color=TEXT))
+    fig.update_xaxes(showgrid=False, zeroline=False, linecolor=GRID, tickfont=dict(color=TEXT), automargin=True)
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor=GRID,
+        zeroline=False,
+        linecolor=GRID,
+        tickfont=dict(color=TEXT),
+        automargin=True,
+    )
     return fig

@@ -55,13 +55,13 @@ def render_model_comparison_charts(
         st.plotly_chart(
             _build_quality_grouped_bar(cleaned_leaderboard, go),
             use_container_width=True,
-            config={"displayModeBar": False},
+            config=_plotly_chart_config(),
         )
     with top_right:
         st.plotly_chart(
             _build_quality_speed_scatter(cleaned_leaderboard, go),
             use_container_width=True,
-            config={"displayModeBar": False},
+            config=_plotly_chart_config(),
         )
 
     bottom_left, bottom_right = st.columns(2, gap="large")
@@ -73,14 +73,24 @@ def render_model_comparison_charts(
             st.plotly_chart(
                 wer_figure,
                 use_container_width=True,
-                config={"displayModeBar": False},
+                config=_plotly_chart_config(),
             )
     with bottom_right:
         st.plotly_chart(
             _build_normalized_heatmap(cleaned_leaderboard, go),
             use_container_width=True,
-            config={"displayModeBar": False},
+            config=_plotly_chart_config(),
         )
+
+
+def _plotly_chart_config() -> dict[str, Any]:
+    return {
+        "displayModeBar": True,
+        "displaylogo": False,
+        "scrollZoom": True,
+        "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d"],
+        "toImageButtonOptions": {"format": "png", "scale": 2},
+    }
 
 
 def _import_plotly_modules() -> tuple[Any, Any] | None:
@@ -177,11 +187,13 @@ def _build_quality_grouped_bar(rows: list[dict[str, Any]], go: Any) -> Any:
         barmode="group",
         yaxis_title="Metric value",
         xaxis_title="Model",
+        bargap=0.16,
     )
+    figure.update_xaxes(tickangle=-23, tickfont=dict(size=11))
     return apply_dark_pink_theme(
         figure,
         title="Model quality metrics (WER/CER lower is better)",
-        height=430,
+        height=470,
     )
 
 
@@ -212,9 +224,10 @@ def _build_quality_speed_scatter(rows: list[dict[str, Any]], go: Any) -> Any:
             go.Scatter(
                 x=x_values,
                 y=y_values,
-                mode="markers+text",
-                text=model_ids,
+                mode="markers+text" if len(model_ids) <= 6 else "markers",
+                text=model_ids if len(model_ids) <= 6 else None,
                 textposition="top center",
+                cliponaxis=False,
                 customdata=customdata,
                 marker=dict(
                     size=marker_sizes,
@@ -237,7 +250,12 @@ def _build_quality_speed_scatter(rows: list[dict[str, Any]], go: Any) -> Any:
         xaxis_title="Latency mean [seconds]",
         yaxis_title="WER mean",
     )
-    return apply_dark_pink_theme(figure, title="Quality vs speed trade-off (bubble size = RAM)", height=430)
+    wer_values = [value for value in y_values if value is not None]
+    if wer_values:
+        padding = max((max(wer_values) - min(wer_values)) * 0.2, 0.03)
+        figure.update_yaxes(range=[max(0.0, min(wer_values) - padding), max(wer_values) + padding])
+
+    return apply_dark_pink_theme(figure, title="Quality vs speed trade-off (bubble size = RAM)", height=470)
 
 
 def _build_wer_boxplot(detailed_rows: list[dict[str, Any]], go: Any) -> Any | None:
@@ -271,7 +289,8 @@ def _build_wer_boxplot(detailed_rows: list[dict[str, Any]], go: Any) -> Any | No
         xaxis_title="Model",
         showlegend=False,
     )
-    return apply_dark_pink_theme(figure, title="WER distribution across all samples", height=430)
+    figure.update_xaxes(tickangle=-20, tickfont=dict(size=11))
+    return apply_dark_pink_theme(figure, title="WER distribution across all samples", height=470)
 
 
 def _build_normalized_heatmap(rows: list[dict[str, Any]], go: Any) -> Any:
@@ -326,7 +345,8 @@ def _build_normalized_heatmap(rows: list[dict[str, Any]], go: Any) -> Any:
         xaxis_title="Metric",
         yaxis_title="Model",
     )
-    return apply_dark_pink_theme(figure, title="Normalized model score heatmap (higher is better)", height=430)
+    figure.update_xaxes(tickangle=-24, tickfont=dict(size=11))
+    return apply_dark_pink_theme(figure, title="Normalized model score heatmap (higher is better)", height=470)
 
 
 def _normalize_metric(value: float | None, reference: list[float], *, higher_is_better: bool) -> float:

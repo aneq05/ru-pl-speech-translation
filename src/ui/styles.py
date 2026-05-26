@@ -376,6 +376,46 @@ def inject_styles() -> None:
                 padding: 0.28rem 0.44rem;
             }
 
+            .chart-preview-card {
+                border: 1px solid rgba(255, 20, 147, 0.28);
+                border-radius: 18px;
+                background: rgba(255, 20, 147, 0.06);
+                padding: 0.72rem;
+                margin: 0.6rem 0 0.95rem 0;
+            }
+
+            .chart-preview-link {
+                display: block;
+                text-decoration: none;
+            }
+
+            .chart-preview-image {
+                display: block;
+                width: 100%;
+                height: auto;
+                border-radius: 14px;
+                border: 1px solid rgba(255, 20, 147, 0.28);
+                transition: transform 0.16s ease, box-shadow 0.16s ease;
+            }
+
+            .chart-preview-image:hover {
+                transform: translateY(-1px) scale(1.01);
+                box-shadow: 0 10px 26px rgba(255, 20, 147, 0.26);
+            }
+
+            .chart-preview-caption {
+                margin-top: 0.48rem;
+                color: #ffeaf7;
+                font-weight: 700;
+                font-size: 0.92rem;
+            }
+
+            .chart-preview-hint {
+                margin-top: 0.16rem;
+                color: #ffc8e9;
+                font-size: 0.8rem;
+            }
+
             div[data-testid="stRadio"] label {
                 color: #ffe3f4;
             }

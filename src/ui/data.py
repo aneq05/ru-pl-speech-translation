@@ -99,16 +99,34 @@ def get_tongue_twister_reference(file_name: str | None) -> dict[str, str]:
 
 
 def find_latest_benchmark_run(report_root_dir: str | Path = "reports/results") -> Path | None:
-    root = Path(report_root_dir)
-    if not root.exists():
-        return None
-
-    run_dirs = [path for path in root.iterdir() if path.is_dir() and path.name.startswith("run_")]
+    run_dirs = list_benchmark_runs(report_root_dir)
     if not run_dirs:
         return None
-
-    run_dirs.sort(key=lambda path: path.stat().st_mtime, reverse=True)
     return run_dirs[0]
+
+
+def find_latest_complete_benchmark_run(report_root_dir: str | Path = "reports/results") -> Path | None:
+    for run_dir in list_benchmark_runs(report_root_dir):
+        if is_complete_benchmark_run(run_dir):
+            return run_dir
+    return None
+
+
+def list_benchmark_runs(report_root_dir: str | Path = "reports/results") -> list[Path]:
+    root = Path(report_root_dir)
+    if not root.exists():
+        return []
+
+    run_dirs = [path for path in root.iterdir() if path.is_dir() and path.name.startswith("run_")]
+    run_dirs.sort(key=lambda path: path.stat().st_mtime, reverse=True)
+    return run_dirs
+
+
+def is_complete_benchmark_run(run_dir: Path) -> bool:
+    has_leaderboard = (run_dir / "leaderboard.csv").exists()
+    has_detailed = (run_dir / "detailed_results.csv").exists()
+    has_plots = len(get_plot_paths(run_dir)) > 0
+    return has_leaderboard and has_detailed and has_plots
 
 
 def load_leaderboard_rows(run_dir: Path) -> list[dict[str, Any]]:

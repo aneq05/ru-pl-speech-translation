@@ -43,3 +43,6 @@ src/ui/model_comparison/results/*
 
 # Local model caches
 models_cache/
+
+# Secret files
+.env

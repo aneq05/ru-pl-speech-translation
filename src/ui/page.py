@@ -18,9 +18,11 @@ from ui.components import (
 from ui.data import (
     build_demo_payload,
     build_flow_steps,
+    find_latest_complete_benchmark_run,
     find_latest_benchmark_run,
     get_plot_paths,
     get_tongue_twister_reference,
+    is_complete_benchmark_run,
     load_detailed_rows,
     load_leaderboard_rows,
 )
@@ -123,23 +125,42 @@ def _render_comparison_mode() -> None:
     _render_comparison_message()
 
     latest_run_dir = find_latest_benchmark_run(UI_COMPARISON_RUNS_DIR)
+    latest_complete_run_dir = find_latest_complete_benchmark_run(UI_COMPARISON_RUNS_DIR)
+
     if latest_run_dir is None:
         latest_run_dir = find_latest_benchmark_run()
+    if latest_complete_run_dir is None:
+        latest_complete_run_dir = find_latest_complete_benchmark_run()
+
+    selected_run_dir = latest_complete_run_dir or latest_run_dir
 
     leaderboard_rows: list[dict[str, Any]] = []
     detailed_rows: list[dict[str, Any]] = []
     plot_paths = []
     run_id = None
 
-    if latest_run_dir is not None:
-        leaderboard_rows = load_leaderboard_rows(latest_run_dir)
-        detailed_rows = load_detailed_rows(latest_run_dir)
-        plot_paths = get_plot_paths(latest_run_dir)
-        run_id = latest_run_dir.name.replace("run_", "", 1)
+    if selected_run_dir is not None:
+        leaderboard_rows = load_leaderboard_rows(selected_run_dir)
+        detailed_rows = load_detailed_rows(selected_run_dir)
+        plot_paths = get_plot_paths(selected_run_dir)
+        run_id = selected_run_dir.name.replace("run_", "", 1)
+
+    if latest_run_dir is not None and not is_complete_benchmark_run(latest_run_dir):
+        failed_id = latest_run_dir.name.replace("run_", "", 1)
+        if latest_complete_run_dir is None:
+            st.warning(
+                f"Latest benchmark run ({failed_id}) is incomplete and has no charts/CSV outputs yet."
+            )
+        else:
+            fallback_id = latest_complete_run_dir.name.replace("run_", "", 1)
+            st.warning(
+                f"Latest benchmark run ({failed_id}) is incomplete. "
+                f"Showing most recent complete run: {fallback_id}."
+            )
 
     render_comparison_dashboard(
         run_id=run_id,
-        run_dir=latest_run_dir,
+        run_dir=selected_run_dir,
         leaderboard_rows=leaderboard_rows,
         detailed_rows=detailed_rows,
         plot_paths=plot_paths,

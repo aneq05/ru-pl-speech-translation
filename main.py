@@ -9,6 +9,7 @@ SRC_DIR = PROJECT_ROOT / "src"
 if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
+from env_loader import load_env_file
 from benchmarking.runner import run_benchmark
 
 
@@ -56,6 +57,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
+    load_env_file(PROJECT_ROOT / ".env")
+
     parser = _build_parser()
     args = parser.parse_args()
 
