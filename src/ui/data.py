@@ -20,25 +20,6 @@ DEFAULT_REFERENCE = {
 }
 
 
-def build_demo_payload() -> dict[str, Any]:
-    return {
-        "file_name": "tongue_twister_demo.wav",
-        "detected_language": "Russian",
-        "confidence": 0.95,
-        "segments": [
-            {"word": "Shla", "confidence": 0.98},
-            {"word": "Sasha", "confidence": 0.97},
-            {"word": "po", "confidence": 0.95},
-            {"word": "shosse", "confidence": 0.96},
-            {"word": "i", "confidence": 0.92},
-            {"word": "sosala", "confidence": 0.91},
-            {"word": "sushku", "confidence": 0.93},
-        ],
-        "recognized_text": "Shla Sasha po shosse i sosala sushku.",
-        "translation": "Szla Sasza po szosie i ssala suszke.",
-    }
-
-
 def build_flow_steps(has_audio: bool, has_result: bool) -> list[dict[str, str]]:
     base_steps = [
         {"icon": MIC, "title": "Upload", "detail": "Audio selected"},

@@ -4,8 +4,4 @@ soundfile
 librosa
 matplotlib
 plotly
-
-# Optional ASR backends for benchmark:
-# openai-whisper
-# transformers
-# torch
+unidecode

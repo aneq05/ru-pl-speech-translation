@@ -8,7 +8,11 @@ This repository contains:
 ## Current status
 
 - `Model Comparison` is connected to real benchmark execution.
-- `Analysis` UI flow is implemented, but the ASR/translation payload is still demo/mock data.
+- `Analysis` runs real ASR with `whisper:base` on uploaded audio.
+- `Analysis` Polish output source:
+  - reference catalog translation (when filename matches `data/reference_texts/audio_key_map.json`),
+  - reference catalog translation matched by recognized Russian text similarity,
+  - transliteration fallback for new/unknown files.
 - Benchmark model execution is sequential (one model at a time) to reduce memory pressure.
 
 ## Quick start
@@ -51,7 +55,8 @@ Modes:
   - upload `.wav`,
   - show waveform,
   - show matched reference text by filename (if found),
-  - display demo transcript/translation payload.
+  - run real transcription with `whisper:base`,
+  - show Polish output from reference translation or transliteration fallback.
 - `Model Comparison`
   - click `Run benchmark on dataset`,
   - run benchmark on `data/raw`,

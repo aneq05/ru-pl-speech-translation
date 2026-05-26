@@ -6,6 +6,7 @@ from typing import Any
 import streamlit as st
 from benchmarking.runner import run_benchmark
 
+from ui.analysis_engine import analyze_uploaded_audio
 from ui.components import (
     render_audio_panel,
     render_comparison_dashboard,
@@ -16,7 +17,6 @@ from ui.components import (
     render_sidebar_controls,
 )
 from ui.data import (
-    build_demo_payload,
     build_flow_steps,
     find_latest_complete_benchmark_run,
     find_latest_benchmark_run,
@@ -48,10 +48,28 @@ def _handle_actions(sidebar_state: SidebarState) -> None:
             return
 
         if sidebar_state.analyze_clicked and sidebar_state.audio_file is not None:
-            payload = build_demo_payload()
-            payload["file_name"] = sidebar_state.audio_file.name
-            st.session_state.analysis_result = payload
-            st.session_state.ui_message = "Analysis complete."
+            with st.spinner("Running ASR and preparing Polish output..."):
+                try:
+                    payload = analyze_uploaded_audio(sidebar_state.audio_file)
+                except Exception as exc:
+                    st.session_state.ui_message = f"Analysis failed: {exc}"
+                else:
+                    st.session_state.analysis_result = payload
+                    source = payload.get("translation_source", "none")
+                    if source == "reference_catalog":
+                        st.session_state.ui_message = (
+                            "Analysis complete. Polish output from reference catalog."
+                        )
+                    elif source == "recognized_text_match":
+                        st.session_state.ui_message = (
+                            "Analysis complete. Polish output matched from recognized Russian text."
+                        )
+                    elif source == "transliteration_fallback":
+                        st.session_state.ui_message = (
+                            "Analysis complete. Polish field uses transliteration fallback."
+                        )
+                    else:
+                        st.session_state.ui_message = "Analysis complete."
         return
 
     if sidebar_state.run_comparison_clicked:

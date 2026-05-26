@@ -318,7 +318,18 @@ def _render_translation_block(result: dict[str, Any] | None) -> None:
         _html("<div class='soft-box'>Waiting for translation result.</div>")
         return
 
+    source = str(result.get("translation_source", "")).strip()
+    if source == "reference_catalog":
+        st.caption("Source: reference catalog translation")
+    elif source == "recognized_text_match":
+        st.caption("Source: matched by recognized Russian text")
+    elif source == "transliteration_fallback":
+        st.caption("Source: transliteration fallback (not full semantic translation)")
+    elif source:
+        st.caption(f"Source: {source}")
+
     translation_text = result["translation"]
+
     st.text_area(
         "Polish translation",
         value=translation_text,
