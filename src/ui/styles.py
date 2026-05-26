@@ -91,40 +91,43 @@ def inject_styles() -> None:
                 text-transform: uppercase;
             }
 
-            /* 2. MAIN HEADERS AND TITLES ( font-family: Montserrat ) */
-            .hero-title {
-                font-family: 'Montserrat', sans-serif;
-                margin: 0.5rem 0 0.2rem 0;
-                font-size: 3.2rem !important;
-                font-weight: 800;
-                line-height: 1.1;
-                color: var(--white);
-                letter-spacing: -0.02em;
+            /* 2. HEADING HIERARCHY (HARD OVERRIDE FOR STREAMLIT) */
+
+            /* H1: Main hero title (Tongue Twister Studio) */
+            h1.hero-title, div[data-testid="stMarkdownContainer"] h1.hero-title {
+                font-family: 'Montserrat', sans-serif !important;
+                margin: 0.5rem 0 0.2rem 0 !important;
+                font-size: 3.2rem !important; /* Huge size */
+                font-weight: 800 !important;
+                line-height: 1.2 !important;
+                color: var(--white) !important;
             }
 
-            .section-title {
-                font-family: 'Montserrat', sans-serif;
-                margin: 0;
-                font-size: 2.2rem !important;
-                font-weight: 700;
-                color: var(--white);
-                letter-spacing: -0.01em;
+            /* H2: Section titles (Processing Flow, Original Tongue Twister) */
+            h2.section-title, div[data-testid="stMarkdownContainer"] h2.section-title {
+                font-family: 'Montserrat', sans-serif !important;
+                margin: 0 !important;
+                font-size: 2.2rem !important; /* Large size */
+                font-weight: 700 !important;
+                color: var(--white) !important;
             }
 
-            .result-title {
-                font-family: 'Montserrat', sans-serif;
-                margin: 1.2rem 0 0.6rem 0;
-                font-size: 1.45rem !important;
-                color: #ffe6f5;
-                font-weight: 700;
+            /* H3: Medium subtitles (Recognized Russian words) */
+            h3.result-title, div[data-testid="stMarkdownContainer"] h3.result-title {
+                font-family: 'Montserrat', sans-serif !important;
+                margin: 1.2rem 0 0.6rem 0 !important;
+                font-size: 1.45rem !important; 
+                color: var(--white) !important;
+                font-weight: 700 !important;
             }
-            
-            .subsection-title {
-                font-family: 'Montserrat', sans-serif;
-                margin: 1rem 0 0.5rem 0;
-                font-size: 1.1rem !important;
-                color: #ffe6f5;
-                font-weight: 700;
+
+            /* H4: Small subtitles (Transcript, Polish output) */
+            h4.subsection-title, div[data-testid="stMarkdownContainer"] h4.subsection-title {
+                font-family: 'Montserrat', sans-serif !important;
+                margin: 1rem 0 0.5rem 0 !important;
+                font-size: 1.1rem !important; 
+                color: #ffe6f5 !important;
+                font-weight: 700 !important;
             }
 
             .section-subtitle {
@@ -185,11 +188,13 @@ def inject_styles() -> None:
                 margin-bottom: 0.8rem;
             }
 
+            /* TRANSPARENT BACKGROUND IN LEFT SIDEBAR (st.info) */
             div[data-testid="stAlert"] {
-                background: rgba(255, 20, 147, 0.08) !important;
-                border: 1px dashed rgba(255, 20, 147, 0.45) !important;
-                border-radius: 16px !important;
-                color: var(--white) !important;
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                color: var(--text-base) !important;
+                padding-left: 0 !important;
             }
             
             div[data-testid="stAlert"] svg {
