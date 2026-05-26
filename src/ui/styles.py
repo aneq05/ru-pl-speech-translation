@@ -92,9 +92,9 @@ def inject_styles() -> None:
             }
 
             /* 2. HEADING HIERARCHY (HARD OVERRIDE FOR STREAMLIT) */
-
-            /* H1: Main hero title (Tongue Twister Studio) */
-            h1.hero-title, div[data-testid="stMarkdownContainer"] h1.hero-title {
+            
+            /* Main hero title (Tongue Twister Studio) */
+            .hero-title {
                 font-family: 'Montserrat', sans-serif !important;
                 margin: 0.5rem 0 0.2rem 0 !important;
                 font-size: 3.2rem !important; /* Huge size */
@@ -103,8 +103,8 @@ def inject_styles() -> None:
                 color: var(--white) !important;
             }
 
-            /* H2: Section titles (Processing Flow, Original Tongue Twister) */
-            h2.section-title, div[data-testid="stMarkdownContainer"] h2.section-title {
+            /* Section titles (Processing Flow, Original Tongue Twister) */
+            .section-title {
                 font-family: 'Montserrat', sans-serif !important;
                 margin: 0 !important;
                 font-size: 2.2rem !important; /* Large size */
@@ -112,8 +112,8 @@ def inject_styles() -> None:
                 color: var(--white) !important;
             }
 
-            /* H3: Medium subtitles (Recognized Russian words) */
-            h3.result-title, div[data-testid="stMarkdownContainer"] h3.result-title {
+            /* Medium subtitles (Recognized Russian words) */
+            .result-title {
                 font-family: 'Montserrat', sans-serif !important;
                 margin: 1.2rem 0 0.6rem 0 !important;
                 font-size: 1.45rem !important; 
@@ -121,8 +121,8 @@ def inject_styles() -> None:
                 font-weight: 700 !important;
             }
 
-            /* H4: Small subtitles (Transcript, Polish output) */
-            h4.subsection-title, div[data-testid="stMarkdownContainer"] h4.subsection-title {
+            /* Small subtitles (Transcript, Polish output) */
+            .subsection-title {
                 font-family: 'Montserrat', sans-serif !important;
                 margin: 1rem 0 0.5rem 0 !important;
                 font-size: 1.1rem !important; 
@@ -138,7 +138,7 @@ def inject_styles() -> None:
 
             /* 3. IMPORTANT TEXT AND ACCENTS */
             strong {
-                color: #ff52be !important; /* Highlights bold text with neon pink */
+                color: #ff52be !important; 
                 font-weight: 700;
             }
 
@@ -189,11 +189,18 @@ def inject_styles() -> None:
             }
 
             /* TRANSPARENT BACKGROUND IN LEFT SIDEBAR (st.info) */
-            div[data-testid="stAlert"] {
+            div[data-testid="stAlert"], 
+            div[data-testid="stAlert"] > div,
+            div[data-testid="stAlert"] > div > div {
+                background-color: transparent !important; 
                 background: transparent !important;
                 border: none !important;
                 box-shadow: none !important;
                 color: var(--text-base) !important;
+            }
+
+            /* Removes left padding for cleaner look */
+            div[data-testid="stAlert"] {
                 padding-left: 0 !important;
             }
             
@@ -201,6 +208,7 @@ def inject_styles() -> None:
                 fill: #ff52be !important;
             }
 
+            /* REFERENCE GRID AND STEPS (unchanged logic, just ensuring it stays intact) */
             .reference-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
