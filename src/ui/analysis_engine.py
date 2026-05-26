@@ -10,10 +10,11 @@ from difflib import SequenceMatcher
 from benchmarking.model_registry import create_model
 from benchmarking.models.base import ASRModel
 from reference_texts import get_reference_by_file_name, load_reference_catalog
+from ui.translation_engine import translate_ru_text_to_polish
 
 try:
     from unidecode import unidecode as _transliterate
-except Exception:  # pragma: no cover - optional dependency
+except Exception:
     def _transliterate(text: str) -> str:
         return text
 
@@ -45,6 +46,7 @@ def analyze_uploaded_audio(
     polish_output, translation_source = _resolve_polish_output(
         file_name=getattr(audio_file, "name", ""),
         recognized_text=recognized_text,
+        device=device,
     )
 
     return {
@@ -75,7 +77,7 @@ def _write_temp_audio(audio_bytes: bytes, *, audio_file_name: str) -> Path:
         return Path(handle.name)
 
 
-def _resolve_polish_output(*, file_name: str, recognized_text: str) -> tuple[str, str]:
+def _resolve_polish_output(*, file_name: str, recognized_text: str, device: str) -> tuple[str, str]:
     reference = get_reference_by_file_name(file_name) if file_name else None
     if reference is not None and reference.polish_translation.strip():
         return reference.polish_translation.strip(), "reference_catalog"
@@ -84,8 +86,15 @@ def _resolve_polish_output(*, file_name: str, recognized_text: str) -> tuple[str
     if matched_from_content is not None:
         return matched_from_content, "recognized_text_match"
 
-    if recognized_text:
-        return _transliterate(recognized_text).strip(), "transliteration_fallback"
+    model_translation = translate_ru_text_to_polish(recognized_text, device=device)
+    if model_translation.status == "ok":
+        return model_translation.text, "model_translation"
+
+    if model_translation.status in {"backend_unavailable", "model_load_error", "inference_error"}:
+        return "", "translation_model_unavailable"
+
+    if recognized_text.strip():
+        return "", "missing_translation"
 
     return "", "none"
 

@@ -323,12 +323,23 @@ def _render_translation_block(result: dict[str, Any] | None) -> None:
         st.caption("Source: reference catalog translation")
     elif source == "recognized_text_match":
         st.caption("Source: matched by recognized Russian text")
-    elif source == "transliteration_fallback":
-        st.caption("Source: transliteration fallback (not full semantic translation)")
+    elif source == "model_translation":
+        st.caption("Source: RU->PL translation model")
+    elif source == "translation_model_unavailable":
+        st.caption("Source: translation model unavailable")
+    elif source == "missing_translation":
+        st.caption("Source: no translation could be generated")
     elif source:
         st.caption(f"Source: {source}")
 
     translation_text = result["translation"]
+    if source == "translation_model_unavailable":
+        _html(
+            "<div class='soft-box'>Translation model unavailable. Install `transformers`, `torch`, and "
+            "`sentencepiece`, then run analysis again.</div>"
+        )
+    if not translation_text.strip():
+        _html("<div class='soft-box'>No Polish translation available for this recording yet.</div>")
 
     st.text_area(
         "Polish translation",

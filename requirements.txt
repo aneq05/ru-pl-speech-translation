@@ -5,3 +5,9 @@ librosa
 matplotlib
 plotly
 unidecode
+
+# Optional backends for ASR and RU->PL translation fallback:
+# openai-whisper
+# transformers
+# torch
+# sentencepiece
