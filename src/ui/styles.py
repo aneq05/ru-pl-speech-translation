@@ -70,7 +70,7 @@ def inject_styles() -> None:
             .app-hero {
                 border: 1px solid var(--line);
                 border-radius: 30px;
-                padding: 1.45rem 1.7rem 1.25rem 1.7rem;
+                padding: 0.8rem 1.5rem;
                 background: linear-gradient(160deg, rgba(15, 15, 15, 0.95), rgba(8, 8, 8, 0.9));
                 box-shadow: 0 24px 44px rgba(255, 20, 147, 0.12), 0 10px 26px rgba(0, 0, 0, 0.55);
                 margin-bottom: 1rem;
@@ -94,8 +94,8 @@ def inject_styles() -> None:
             /* 2. MAIN HEADERS AND TITLES ( font-family: Montserrat ) */
             .hero-title {
                 font-family: 'Montserrat', sans-serif;
-                margin: 0.85rem 0 0.2rem 0;
-                font-size: clamp(2.2rem, 3.5vw, 3.2rem);
+                margin: 0.5rem 0 0.2rem 0;
+                font-size: clamp(2.8rem, 4.5vw, 4rem);
                 font-weight: 800;
                 line-height: 1.1;
                 color: var(--white);
@@ -105,7 +105,7 @@ def inject_styles() -> None:
             .section-title {
                 font-family: 'Montserrat', sans-serif;
                 margin: 0;
-                font-size: 1.75rem;
+                font-size: 2.1rem;
                 font-weight: 700;
                 color: var(--white);
                 letter-spacing: -0.01em;
@@ -138,6 +138,7 @@ def inject_styles() -> None:
                 color: var(--white);
                 font-weight: 700;
                 letter-spacing: 0.01em;
+                white-space: nowrap;
             }
 
             .bubble-detail {
@@ -150,17 +151,17 @@ def inject_styles() -> None:
             .reference-card h3 {
                 font-family: 'Quicksand', sans-serif;
                 margin: 0;
-                font-size: 1.15rem;
+                font-size: 1rem;
                 line-height: 1.4;
                 color: var(--white);
-                font-weight: 700;
+                font-weight: 500;
             }
 
             /* REMAINING UI COMPONENTS */
             .section-panel {
                 border: 1px solid var(--line-soft);
                 border-radius: 26px;
-                padding: 1.2rem 1.2rem 1.1rem 1.2rem;
+                padding: 0.8rem 1.2rem 1rem 1.2rem;
                 background: linear-gradient(170deg, rgba(13, 13, 13, 0.95), rgba(7, 7, 7, 0.9));
                 box-shadow: inset 0 0 0 1px rgba(255, 20, 147, 0.06), 0 14px 32px rgba(0, 0, 0, 0.35);
                 margin-bottom: 0.95rem;
@@ -174,6 +175,17 @@ def inject_styles() -> None:
                 color: #fff0fa;
                 font-size: 0.95rem;
                 margin-bottom: 0.8rem;
+            }
+
+            div[data-testid="stAlert"] {
+                background: rgba(255, 20, 147, 0.08) !important;
+                border: 1px dashed rgba(255, 20, 147, 0.45) !important;
+                border-radius: 16px !important;
+                color: var(--white) !important;
+            }
+            
+            div[data-testid="stAlert"] svg {
+                fill: #ff52be !important;
             }
 
             .reference-grid {
@@ -192,7 +204,7 @@ def inject_styles() -> None:
 
             .reference-card span {
                 display: block;
-                font-size: 0.76rem;
+                font-size: 0.88rem;
                 text-transform: uppercase;
                 letter-spacing: 0.08em;
                 color: #ffcbe9;
