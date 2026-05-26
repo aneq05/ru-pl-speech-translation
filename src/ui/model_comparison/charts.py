@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from html import escape
 from typing import Any
 
 import streamlit as st
@@ -30,6 +31,16 @@ HEATMAP_METRICS = [
     ("peak_memory_mb_mean", "Peak RAM [MB]", False),
 ]
 
+RANKING_METRICS = [
+    ("wer_mean", "WER", False, 0.34),
+    ("cer_mean", "CER", False, 0.16),
+    ("token_f1_mean", "Token F1", True, 0.18),
+    ("exact_match_mean", "Exact match", True, 0.12),
+    ("latency_sec_mean", "Latency [s]", False, 0.12),
+    ("rtf_mean", "RTF", False, 0.04),
+    ("peak_memory_mb_mean", "Peak RAM [MB]", False, 0.04),
+]
+
 
 def render_model_comparison_charts(
     *,
@@ -49,43 +60,93 @@ def render_model_comparison_charts(
 
     st.markdown("#### Interactive comparison charts")
     _render_highlight_metrics(cleaned_leaderboard)
+    ranked_models = _build_model_ranking(cleaned_leaderboard)
+    _render_model_ranking(ranked_models)
+    _render_chart_gallery(cleaned_leaderboard, detailed_rows, go)
 
-    top_left, top_right = st.columns(2, gap="large")
-    with top_left:
-        st.plotly_chart(
-            _build_quality_grouped_bar(cleaned_leaderboard, go),
-            use_container_width=True,
-            config=_plotly_chart_config(),
-        )
-    with top_right:
-        st.plotly_chart(
-            _build_quality_speed_scatter(cleaned_leaderboard, go),
-            use_container_width=True,
-            config=_plotly_chart_config(),
-        )
 
-    bottom_left, bottom_right = st.columns(2, gap="large")
-    with bottom_left:
-        wer_figure = _build_wer_boxplot(detailed_rows, go)
-        if wer_figure is None:
-            st.info("No `detailed_results.csv` detected for WER distribution boxplot.")
-        else:
-            st.plotly_chart(
-                wer_figure,
-                use_container_width=True,
-                config=_plotly_chart_config(),
+def _render_chart_gallery(
+    leaderboard_rows: list[dict[str, Any]],
+    detailed_rows: list[dict[str, Any]],
+    go: Any,
+) -> None:
+    st.markdown("#### Chart gallery")
+    st.caption(
+        "Compact pink cards. Open a card to inspect an interactive chart, "
+        "then use fullscreen in the chart toolbar for a larger view."
+    )
+
+    chart_cards: list[dict[str, Any]] = [
+        {
+            "badge": "01",
+            "title": "Quality metrics overview",
+            "subtitle": "WER, CER, Token F1 and exact match side by side.",
+            "figure": _build_quality_grouped_bar(leaderboard_rows, go),
+            "missing_message": "Missing leaderboard values for quality overview.",
+        },
+        {
+            "badge": "02",
+            "title": "Quality vs speed trade-off",
+            "subtitle": "Latency and WER with bubble size based on memory usage.",
+            "figure": _build_quality_speed_scatter(leaderboard_rows, go),
+            "missing_message": "Missing leaderboard values for trade-off scatter.",
+        },
+        {
+            "badge": "03",
+            "title": "WER distribution",
+            "subtitle": "Per-sample spread for each model on the full dataset.",
+            "figure": _build_wer_boxplot(detailed_rows, go),
+            "missing_message": "No detailed benchmark rows available for WER distribution.",
+        },
+        {
+            "badge": "04",
+            "title": "Normalized score heatmap",
+            "subtitle": "Relative score across all tracked metrics.",
+            "figure": _build_normalized_heatmap(leaderboard_rows, go),
+            "missing_message": "Missing leaderboard values for normalized heatmap.",
+        },
+    ]
+
+    left_column, right_column = st.columns(2, gap="large")
+    for index, chart in enumerate(chart_cards):
+        target_column = left_column if index % 2 == 0 else right_column
+        with target_column:
+            st.markdown(
+                _build_chart_card_header(
+                    badge=str(chart["badge"]),
+                    title=str(chart["title"]),
+                    subtitle=str(chart["subtitle"]),
+                ),
+                unsafe_allow_html=True,
             )
-    with bottom_right:
-        st.plotly_chart(
-            _build_normalized_heatmap(cleaned_leaderboard, go),
-            use_container_width=True,
-            config=_plotly_chart_config(),
-        )
+            with st.expander(f"Open chart {chart['badge']}: {chart['title']}", expanded=False):
+                figure = chart["figure"]
+                if figure is None:
+                    st.info(str(chart["missing_message"]))
+                else:
+                    st.plotly_chart(
+                        figure,
+                        use_container_width=True,
+                        config=_plotly_chart_config(),
+                    )
+
+
+def _build_chart_card_header(*, badge: str, title: str, subtitle: str) -> str:
+    safe_title = escape(title)
+    safe_subtitle = escape(subtitle)
+    safe_badge = escape(badge)
+    return (
+        "<div class='chart-launcher-card'>"
+        f"<span class='chart-launcher-badge'>{safe_badge}</span>"
+        f"<div class='chart-launcher-title'>{safe_title}</div>"
+        f"<div class='chart-launcher-subtitle'>{safe_subtitle}</div>"
+        "</div>"
+    )
 
 
 def _plotly_chart_config() -> dict[str, Any]:
     return {
-        "displayModeBar": True,
+        "displayModeBar": "hover",
         "displaylogo": False,
         "scrollZoom": True,
         "modeBarButtonsToRemove": ["select2d", "lasso2d", "autoScale2d"],
@@ -146,6 +207,101 @@ def _render_highlight_metrics(rows: list[dict[str, Any]]) -> None:
             st.metric("Lowest Latency", f"{fastest['value']:.2f}s", fastest["model_id"])
 
 
+def _build_model_ranking(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not rows:
+        return []
+
+    reference_columns: dict[str, list[float]] = {}
+    for metric_key, _, _, _ in RANKING_METRICS:
+        reference_columns[metric_key] = [float(row[metric_key]) for row in rows if row.get(metric_key) is not None]
+
+    ranked: list[dict[str, Any]] = []
+    for row in rows:
+        weighted_sum = 0.0
+        weight_total = 0.0
+        for metric_key, _, higher_is_better, weight in RANKING_METRICS:
+            normalized = _normalize_metric(
+                _to_float(row.get(metric_key)),
+                reference_columns.get(metric_key, []),
+                higher_is_better=higher_is_better,
+            )
+            weighted_sum += normalized * weight
+            weight_total += weight
+
+        composite_score = 0.0 if weight_total <= 0 else weighted_sum / weight_total
+        ranked.append(
+            {
+                "model_id": row["model_id"],
+                "score": composite_score,
+                "wer_mean": _to_float(row.get("wer_mean")),
+                "cer_mean": _to_float(row.get("cer_mean")),
+                "token_f1_mean": _to_float(row.get("token_f1_mean")),
+                "exact_match_mean": _to_float(row.get("exact_match_mean")),
+                "latency_sec_mean": _to_float(row.get("latency_sec_mean")),
+                "rtf_mean": _to_float(row.get("rtf_mean")),
+                "peak_memory_mb_mean": _to_float(row.get("peak_memory_mb_mean")),
+            }
+        )
+
+    ranked.sort(
+        key=lambda entry: (
+            -float(entry["score"]),
+            float("inf") if entry["wer_mean"] is None else float(entry["wer_mean"]),
+            float("inf") if entry["latency_sec_mean"] is None else float(entry["latency_sec_mean"]),
+        )
+    )
+
+    for index, row in enumerate(ranked, start=1):
+        row["rank"] = index
+    return ranked
+
+
+def _render_model_ranking(ranked_models: list[dict[str, Any]]) -> None:
+    if not ranked_models:
+        return
+
+    st.markdown("#### Model ranking")
+    winner = ranked_models[0]
+    winner_id = escape(str(winner["model_id"]))
+    winner_score = float(winner["score"]) * 100.0
+    winner_wer = _format_value(winner.get("wer_mean"), decimals=3)
+    winner_latency = _format_value(winner.get("latency_sec_mean"), decimals=2, suffix=" s")
+    winner_f1 = _format_value(winner.get("token_f1_mean"), decimals=3)
+
+    st.markdown(
+        (
+            "<div class='winner-card'>"
+            "<div class='winner-eyebrow'>Best overall model</div>"
+            f"<div class='winner-model'>{winner_id}</div>"
+            "<div class='winner-metrics'>"
+            f"<span>Composite score: {winner_score:.1f}</span>"
+            f"<span>WER: {winner_wer}</span>"
+            f"<span>Latency: {winner_latency}</span>"
+            f"<span>Token F1: {winner_f1}</span>"
+            "</div>"
+            "</div>"
+        ),
+        unsafe_allow_html=True,
+    )
+
+    ranking_table: list[dict[str, Any]] = []
+    for row in ranked_models:
+        ranking_table.append(
+            {
+                "Rank": row["rank"],
+                "Model": row["model_id"],
+                "Composite score": round(float(row["score"]) * 100.0, 2),
+                "WER": _format_value(row.get("wer_mean"), decimals=3),
+                "CER": _format_value(row.get("cer_mean"), decimals=3),
+                "Token F1": _format_value(row.get("token_f1_mean"), decimals=3),
+                "Exact match": _format_value(row.get("exact_match_mean"), decimals=3),
+                "Latency [s]": _format_value(row.get("latency_sec_mean"), decimals=2),
+            }
+        )
+
+    st.dataframe(ranking_table, use_container_width=True, hide_index=True)
+
+
 def _pick_best(
     rows: list[dict[str, Any]],
     metric_key: str,
@@ -193,7 +349,7 @@ def _build_quality_grouped_bar(rows: list[dict[str, Any]], go: Any) -> Any:
     return apply_dark_pink_theme(
         figure,
         title="Model quality metrics (WER/CER lower is better)",
-        height=470,
+        height=360,
     )
 
 
@@ -255,7 +411,7 @@ def _build_quality_speed_scatter(rows: list[dict[str, Any]], go: Any) -> Any:
         padding = max((max(wer_values) - min(wer_values)) * 0.2, 0.03)
         figure.update_yaxes(range=[max(0.0, min(wer_values) - padding), max(wer_values) + padding])
 
-    return apply_dark_pink_theme(figure, title="Quality vs speed trade-off (bubble size = RAM)", height=470)
+    return apply_dark_pink_theme(figure, title="Quality vs speed trade-off (bubble size = RAM)", height=360)
 
 
 def _build_wer_boxplot(detailed_rows: list[dict[str, Any]], go: Any) -> Any | None:
@@ -290,7 +446,7 @@ def _build_wer_boxplot(detailed_rows: list[dict[str, Any]], go: Any) -> Any | No
         showlegend=False,
     )
     figure.update_xaxes(tickangle=-20, tickfont=dict(size=11))
-    return apply_dark_pink_theme(figure, title="WER distribution across all samples", height=470)
+    return apply_dark_pink_theme(figure, title="WER distribution across all samples", height=360)
 
 
 def _build_normalized_heatmap(rows: list[dict[str, Any]], go: Any) -> Any:
@@ -346,7 +502,7 @@ def _build_normalized_heatmap(rows: list[dict[str, Any]], go: Any) -> Any:
         yaxis_title="Model",
     )
     figure.update_xaxes(tickangle=-24, tickfont=dict(size=11))
-    return apply_dark_pink_theme(figure, title="Normalized model score heatmap (higher is better)", height=470)
+    return apply_dark_pink_theme(figure, title="Normalized model score heatmap (higher is better)", height=360)
 
 
 def _normalize_metric(value: float | None, reference: list[float], *, higher_is_better: bool) -> float:
@@ -405,3 +561,9 @@ def _to_float(value: Any) -> float | None:
             return None
 
     return None
+
+
+def _format_value(value: float | None, *, decimals: int, suffix: str = "") -> str:
+    if value is None:
+        return "n/a"
+    return f"{value:.{decimals}f}{suffix}"
