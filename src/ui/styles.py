@@ -95,7 +95,7 @@ def inject_styles() -> None:
             .hero-title {
                 font-family: 'Montserrat', sans-serif;
                 margin: 0.5rem 0 0.2rem 0;
-                font-size: clamp(2.8rem, 4.5vw, 4rem);
+                font-size: 3.2rem !important;
                 font-weight: 800;
                 line-height: 1.1;
                 color: var(--white);
@@ -105,7 +105,7 @@ def inject_styles() -> None:
             .section-title {
                 font-family: 'Montserrat', sans-serif;
                 margin: 0;
-                font-size: 2.1rem;
+                font-size: 2.2rem !important;
                 font-weight: 700;
                 color: var(--white);
                 letter-spacing: -0.01em;
@@ -114,7 +114,15 @@ def inject_styles() -> None:
             .result-title {
                 font-family: 'Montserrat', sans-serif;
                 margin: 1.2rem 0 0.6rem 0;
-                font-size: 1.15rem;
+                font-size: 1.45rem !important;
+                color: #ffe6f5;
+                font-weight: 700;
+            }
+            
+            .subsection-title {
+                font-family: 'Montserrat', sans-serif;
+                margin: 1rem 0 0.5rem 0;
+                font-size: 1.1rem !important;
                 color: #ffe6f5;
                 font-weight: 700;
             }
