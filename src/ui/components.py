@@ -362,13 +362,17 @@ def _render_translation_block(result: dict[str, Any] | None) -> None:
         return
 
     st.caption("Word-by-word preview")
-    per_row = 6
-    for start in range(0, len(tokens), per_row):
-        row_items = tokens[start : start + per_row]
-        columns = st.columns(len(row_items), gap="small")
-        for column, token in zip(columns, row_items, strict=False):
-            with column:
-                st.markdown(f"`{token}`")
+    chips = "".join(
+        (
+            "<span style=\"display:inline-block;margin:0 0.35rem 0.35rem 0;padding:0.24rem 0.7rem;"
+            "border-radius:999px;background:rgba(255,20,147,0.10);border:1px solid rgba(255,20,147,0.22);"
+            "color:#ffe8f7;font-size:0.9rem;font-weight:600;line-height:1.2;\">"
+            f"{escape(token)}"
+            "</span>"
+        )
+        for token in tokens
+    )
+    _html(f"<div style='margin-top:0.35rem; line-height:1.8;'>{chips}</div>")
 
 
 def _render_saved_chart_preview(plot_path: Path) -> None:
