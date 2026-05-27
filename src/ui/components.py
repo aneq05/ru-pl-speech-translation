@@ -55,10 +55,14 @@ def _extract_waveform(audio_file: Any, bars: int = 170) -> np.ndarray | None:
 
 def render_sidebar_controls() -> SidebarState:
     with st.sidebar:
-        st.markdown("## Control")
+        st.markdown("## Control Panel")
+
+        # Add an info block for better user context
+        st.info("Upload a Russian tongue twister audio to generate a transcript and a Polish translation.")
+        st.divider() 
 
         mode = st.radio(
-            "Mode",
+            "Select App Mode:",
             ["Analysis", "Model Comparison"],
             index=0,
         )
@@ -98,7 +102,7 @@ def render_hero() -> None:
         """
         <section class="app-hero">
             <div class="eyebrow">Russian to Polish ASR</div>
-            <h1 class="hero-title">Tongue Twister Studio</h1>
+            <div class="hero-title">Tongue Twister Studio</div>
         </section>
         """
     )
@@ -115,7 +119,7 @@ def render_comparison_dashboard(
     _html(
         """
         <section class="section-panel center-stage">
-            <h2 class="section-title">Model Comparison</h2>
+            <div class="section-title">Model Comparison</div>
             <p class="section-subtitle">Comparative metrics and charts from your dataset benchmark runs.</p>
         """
     )
@@ -163,17 +167,17 @@ def render_reference_panel(reference: dict[str, str], file_name: str | None) -> 
     _html(
         f"""
         <section class="section-panel center-stage">
-            <h2 class="section-title">Original Tongue Twister</h2>
+            <div class="section-title">Original Tongue Twister</div>
             <p class="section-subtitle">Source: {source_name}</p>
             <p class="section-subtitle">Title: {title}</p>
             <div class="reference-grid">
                 <article class="reference-card">
                     <span>Russian original</span>
-                    <h3>{original}</h3>
+                    <div class="ref-text">{original}</div>
                 </article>
                 <article class="reference-card">
                     <span>Polish translation</span>
-                    <h3>{polish}</h3>
+                    <div class="ref-text">{polish}</div>
                 </article>
             </div>
         </section>
@@ -185,7 +189,7 @@ def render_audio_panel(audio_file: Any) -> None:
     _html(
         """
         <section class="section-panel center-stage audio-focus">
-            <h2 class="section-title">Audio and Waveform</h2>
+            <div class="section-title">Audio and Waveform</div>
         """
     )
 
@@ -215,7 +219,7 @@ def render_flow_track(steps: list[dict[str, str]]) -> None:
     _html(
         """
         <section class="section-panel center-stage">
-            <h2 class="section-title">Processing Flow</h2>
+            <div class="section-title">Processing Flow</div>
         """
     )
 
@@ -274,14 +278,19 @@ def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
     )
 
     _render_word_stream(result)
-    _render_transcript_block(result)
-    _render_translation_block(result)
+
+    # CREATE TWO COLUMNS FOR SIDE-BY-SIDE COMPARISON
+    col1, col2 = st.columns(2, gap="medium")
+    with col1:
+        _render_transcript_block(result) 
+    with col2:
+        _render_translation_block(result)
 
     _html("</section>")
 
 
 def _render_word_stream(result: dict[str, Any] | None) -> None:
-    _html("<h3 class='result-title'>Recognized Russian words</h3>")
+    _html("<div class='result-title'>Recognized Russian words</div>")
 
     if result is None:
         _html("<div class='soft-box'>Waiting for analysis result.</div>")
@@ -302,7 +311,7 @@ def _render_word_stream(result: dict[str, Any] | None) -> None:
 
 
 def _render_transcript_block(result: dict[str, Any] | None) -> None:
-    _html("<h3 class='result-title'>Transcript</h3>")
+    _html("<div class='subsection-title'>Transcript</div>")
     transcript = "" if result is None else result["recognized_text"]
     st.text_area(
         "Transcript (ASR)",
@@ -313,7 +322,7 @@ def _render_transcript_block(result: dict[str, Any] | None) -> None:
 
 
 def _render_translation_block(result: dict[str, Any] | None) -> None:
-    _html("<h3 class='result-title'>Polish output</h3>")
+    _html("<div class='subsection-title'>Polish output</div>")
     if result is None:
         _html("<div class='soft-box'>Waiting for translation result.</div>")
         return
@@ -353,13 +362,17 @@ def _render_translation_block(result: dict[str, Any] | None) -> None:
         return
 
     st.caption("Word-by-word preview")
-    per_row = 6
-    for start in range(0, len(tokens), per_row):
-        row_items = tokens[start : start + per_row]
-        columns = st.columns(len(row_items), gap="small")
-        for column, token in zip(columns, row_items, strict=False):
-            with column:
-                st.markdown(f"`{token}`")
+    chips = "".join(
+        (
+            "<span style=\"display:inline-block;margin:0 0.35rem 0.35rem 0;padding:0.24rem 0.7rem;"
+            "border-radius:999px;background:rgba(255,20,147,0.10);border:1px solid rgba(255,20,147,0.22);"
+            "color:#ffe8f7;font-size:0.9rem;font-weight:600;line-height:1.2;\">"
+            f"{escape(token)}"
+            "</span>"
+        )
+        for token in tokens
+    )
+    _html(f"<div style='margin-top:0.35rem; line-height:1.8;'>{chips}</div>")
 
 
 def _render_saved_chart_preview(plot_path: Path) -> None:

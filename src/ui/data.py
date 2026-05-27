@@ -13,10 +13,11 @@ NOTE = "\U0001F4DD"
 HEART = "\U0001F497"
 
 
+# Default fallback reference with proper Cyrillic and Polish alphabets
 DEFAULT_REFERENCE = {
     "title": "Shla Sasha po shosse",
-    "original": "\u0428\u043b\u0430 \u0421\u0430\u0448\u0430 \u043f\u043e \u0448\u043e\u0441\u0441\u0435 \u0438 \u0441\u043e\u0441\u0430\u043b\u0430 \u0441\u0443\u0448\u043a\u0443.",
-    "polish": "Sz\u0142a Sasza po szosie i ssa\u0142a suszk\u0119.",
+    "original": "Шла Саша по шоссе и сосала сушку.",
+    "polish": "Szła Sasza po szosie i ssała suszkę.",
 }
 
 

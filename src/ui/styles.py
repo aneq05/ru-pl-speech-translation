@@ -16,7 +16,8 @@ def inject_styles() -> None:
     st.markdown(
         """
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap');
+            /* Import two fonts: Montserrat for headings, Quicksand for body text */
+            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Quicksand:wght@400;500;600;700&display=swap');
 
             :root {
                 --bg-0: #020202;
@@ -24,12 +25,23 @@ def inject_styles() -> None:
                 --bg-2: #101010;
                 --pink: #ff1493;
                 --white: #ffffff;
+                --text-base: #e0e2ed;       /* Soft light-gray for base text */
+                --text-muted: #a1a8b8;      /* Muted color for secondary subtitles */
                 --line: rgba(255, 20, 147, 0.34);
                 --line-soft: rgba(255, 20, 147, 0.16);
             }
 
-            html, body, [class*="css"], [data-testid="stAppViewContainer"] {
+            /* STREAMLIT HEADER: Make the default top header completely transparent */
+            [data-testid="stHeader"] {
+                background-color: transparent !important;
+            }
+
+            /* 1. BASE TEXT ( font-family: Quicksand ) */
+            html, body, [class*="css"], [data-testid="stAppViewContainer"], p, span {
                 font-family: 'Quicksand', 'Segoe UI', sans-serif;
+                color: var(--text-base);
+                font-size: 0.98rem;
+                line-height: 1.5;
             }
 
             .stApp {
@@ -37,7 +49,7 @@ def inject_styles() -> None:
                     radial-gradient(900px 450px at 8% -8%, rgba(255, 20, 147, 0.24), transparent 64%),
                     radial-gradient(720px 420px at 100% 0%, rgba(255, 20, 147, 0.18), transparent 62%),
                     linear-gradient(165deg, var(--bg-0) 0%, var(--bg-1) 45%, var(--bg-2) 100%);
-                color: var(--white);
+                color: var(--text-base);
             }
 
             .block-container {
@@ -58,7 +70,7 @@ def inject_styles() -> None:
             .app-hero {
                 border: 1px solid var(--line);
                 border-radius: 30px;
-                padding: 1.45rem 1.7rem 1.25rem 1.7rem;
+                padding: 0.8rem 1.5rem;
                 background: linear-gradient(160deg, rgba(15, 15, 15, 0.95), rgba(8, 8, 8, 0.9));
                 box-shadow: 0 24px 44px rgba(255, 20, 147, 0.12), 0 10px 26px rgba(0, 0, 0, 0.55);
                 margin-bottom: 1rem;
@@ -79,43 +91,91 @@ def inject_styles() -> None:
                 text-transform: uppercase;
             }
 
+            /* 2. HEADING HIERARCHY (HARD OVERRIDE FOR STREAMLIT) */
+            
+            /* Main hero title (Tongue Twister Studio) */
             .hero-title {
-                margin: 0.85rem 0 0.2rem 0;
-                font-size: clamp(1.85rem, 2.7vw, 2.95rem);
-                line-height: 1.1;
-                color: var(--white);
+                font-family: 'Montserrat', sans-serif !important;
+                margin: 0.5rem 0 0.2rem 0 !important;
+                font-size: 2.6rem !important; /* Huge size */
+                font-weight: 800 !important;
+                line-height: 1.2 !important;
+                color: var(--white) !important;
             }
 
-            .section-panel {
-                border: 1px solid var(--line-soft);
-                border-radius: 26px;
-                padding: 1.05rem 1.05rem 1rem 1.05rem;
-                background: linear-gradient(170deg, rgba(13, 13, 13, 0.95), rgba(7, 7, 7, 0.9));
-                box-shadow: inset 0 0 0 1px rgba(255, 20, 147, 0.06), 0 14px 32px rgba(0, 0, 0, 0.35);
-                margin-bottom: 0.95rem;
-            }
-
-            .center-stage {
-                width: 100%;
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-            .audio-focus {
-                padding: 1.25rem 1.15rem 1.1rem 1.15rem;
-            }
-
+            /* Section titles (Processing Flow, Original Tongue Twister) */
             .section-title {
-                margin: 0;
-                font-size: 1.52rem;
-                font-weight: 700;
-                color: var(--white);
+                font-family: 'Montserrat', sans-serif !important;
+                margin: 0 !important;
+                font-size: 1.8rem !important; /* Large size */
+                font-weight: 700 !important;
+                color: var(--white) !important;
+            }
+
+            /* Medium subtitles (Recognized Russian words) */
+            .result-title {
+                font-family: 'Montserrat', sans-serif !important;
+                margin: 1.2rem 0 0.6rem 0 !important;
+                font-size: 1.45rem !important; 
+                color: var(--white) !important;
+                font-weight: 700 !important;
+            }
+
+            /* Small subtitles (Transcript, Polish output) */
+            .subsection-title {
+                font-family: 'Montserrat', sans-serif !important;
+                margin: 1rem 0 0.5rem 0 !important;
+                font-size: 1.1rem !important; 
+                color: #ffe6f5 !important;
+                font-weight: 700 !important;
             }
 
             .section-subtitle {
-                margin: 0.22rem 0 0.8rem 0;
-                color: #ffd8ef;
-                font-size: 0.9rem;
+                margin: 0.3rem 0 0.8rem 0;
+                color: var(--text-muted);
+                font-size: 0.92rem;
+            }
+
+            /* 3. IMPORTANT TEXT AND ACCENTS */
+            strong {
+                color: #ff52be !important; 
+                font-weight: 700;
+            }
+
+            .bubble-title {
+                font-family: 'Montserrat', sans-serif;
+                margin-top: 0.72rem;
+                font-size: 1.05rem;
+                color: var(--white);
+                font-weight: 700;
+                letter-spacing: 0.01em;
+                white-space: nowrap;
+            }
+
+            .bubble-detail {
+                margin-top: 0.3rem;
+                font-size: 0.85rem;
+                color: var(--text-muted);
+                line-height: 1.3;
+            }
+
+            .reference-card .ref-text{
+                font-family: 'Quicksand', sans-serif;
+                margin: 0;
+                font-size: 1rem;
+                line-height: 1.4;
+                color: var(--white);
+                font-weight: 500;
+            }
+
+            /* REMAINING UI COMPONENTS */
+            .section-panel {
+                border: 1px solid var(--line-soft);
+                border-radius: 26px;
+                padding: 0.8rem 1.2rem 1rem 1.2rem;
+                background: linear-gradient(170deg, rgba(13, 13, 13, 0.95), rgba(7, 7, 7, 0.9));
+                box-shadow: inset 0 0 0 1px rgba(255, 20, 147, 0.06), 0 14px 32px rgba(0, 0, 0, 0.35);
+                margin-bottom: 0.95rem;
             }
 
             .soft-box {
@@ -128,6 +188,28 @@ def inject_styles() -> None:
                 margin-bottom: 0.8rem;
             }
 
+            /* TRANSPARENT BACKGROUND IN LEFT SIDEBAR (st.info) */
+            div[data-testid="stAlert"], 
+            div[data-testid="stAlert"] > div,
+            div[data-testid="stAlert"] > div > div {
+                background-color: transparent !important; 
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                color: var(--text-base) !important;
+                padding: 0 !important;  
+                margin: 0 !important;  
+            }
+
+            div[data-testid="stAlert"] > div {
+                gap: 0.5rem !important;
+            }
+            
+            div[data-testid="stAlert"] svg {
+                fill: #ff52be !important;
+            }
+
+            /* REFERENCE GRID AND STEPS (unchanged logic, just ensuring it stays intact) */
             .reference-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -144,20 +226,12 @@ def inject_styles() -> None:
 
             .reference-card span {
                 display: block;
-                font-size: 0.76rem;
+                font-size: 0.88rem;
                 text-transform: uppercase;
                 letter-spacing: 0.08em;
                 color: #ffcbe9;
                 margin-bottom: 0.35rem;
                 font-weight: 700;
-            }
-
-            .reference-card h3 {
-                margin: 0;
-                font-size: 1.03rem;
-                line-height: 1.35;
-                color: #ffffff;
-                font-weight: 600;
             }
 
             .bubble-step {
@@ -201,64 +275,6 @@ def inject_styles() -> None:
                 font-weight: 700;
                 color: #ffe7f7;
                 background: rgba(255, 20, 147, 0.22);
-            }
-
-            .bubble-title {
-                margin-top: 0.72rem;
-                font-size: 1.02rem;
-                color: var(--white);
-                font-weight: 700;
-                letter-spacing: 0.01em;
-            }
-
-            .bubble-detail {
-                margin-top: 0.3rem;
-                font-size: 0.88rem;
-                color: #ffd5ec;
-                line-height: 1.3;
-            }
-
-            .result-title {
-                margin: 0.85rem 0 0.5rem 0;
-                font-size: 1.08rem;
-                color: #ffe6f5;
-                font-weight: 700;
-            }
-
-            .word-stream {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 0.5rem;
-                margin: 0.2rem 0 0.35rem 0;
-            }
-
-            .word-pill {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.36rem;
-                border-radius: 999px;
-                border: 1px solid rgba(255, 20, 147, 0.44);
-                background: rgba(255, 20, 147, 0.16);
-                color: var(--white);
-                font-size: 0.92rem;
-                padding: 0.35rem 0.7rem;
-                font-weight: 600;
-            }
-
-            .word-pill small {
-                color: #ffd4ec;
-                font-size: 0.74rem;
-                font-weight: 700;
-            }
-
-            .helper-list {
-                margin: 0.45rem 0 0 0;
-                padding-left: 1.1rem;
-                color: #ffe8f6;
-            }
-
-            .helper-list li {
-                margin-bottom: 0.35rem;
             }
 
             .stAudio {
@@ -317,22 +333,6 @@ def inject_styles() -> None:
                 font-size: 0.98rem;
                 min-height: 2.85rem;
                 box-shadow: 0 10px 24px rgba(255, 20, 147, 0.28);
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
-            }
-
-            .stButton > button[kind="secondary"] {
-                background: linear-gradient(155deg, rgba(255, 20, 147, 0.5), rgba(255, 20, 147, 0.26));
-            }
-
-            .stButton > button:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 14px 28px rgba(255, 20, 147, 0.35);
-                border-color: rgba(255, 20, 147, 0.9);
-            }
-
-            .stButton > button:focus {
-                outline: none;
-                box-shadow: 0 0 0 0.14rem rgba(255, 20, 147, 0.45);
             }
 
             div[data-baseweb="file-uploader"] > section,
@@ -342,20 +342,11 @@ def inject_styles() -> None:
                 background: rgba(255, 20, 147, 0.08);
             }
 
-            div[data-baseweb="file-uploader"] > section > button {
-                border-radius: 999px;
-            }
-
             div[data-testid="stTextArea"] textarea {
                 background: rgba(255, 255, 255, 0.03);
                 border: 1px solid rgba(255, 20, 147, 0.4);
                 color: var(--white);
                 border-radius: 16px;
-            }
-
-            div[data-testid="stTextArea"] textarea:focus {
-                border-color: rgba(255, 20, 147, 0.88);
-                box-shadow: 0 0 0 0.13rem rgba(255, 20, 147, 0.35);
             }
 
             div[data-testid="stProgressBar"] > div > div > div {
