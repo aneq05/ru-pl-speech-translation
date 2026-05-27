@@ -30,7 +30,7 @@ def apply_dark_pink_theme(fig: Any, *, title: str, height: int = 430) -> Any:
         paper_bgcolor=BG_CARD,
         plot_bgcolor=BG_PLOT,
         font=dict(family="Quicksand, Segoe UI, sans-serif", color=TEXT),
-        margin=dict(l=58, r=34, t=112, b=180),
+        margin=dict(l=58, r=34, t=112, b=86),
         legend=dict(
             bgcolor="rgba(0,0,0,0)",
             bordercolor=GRID,
