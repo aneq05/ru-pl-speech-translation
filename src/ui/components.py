@@ -331,8 +331,11 @@ def _render_word_stream(result: dict[str, Any]| None) -> None:
 
 def _render_transcript_block(result: dict[str, Any]| None) -> None:
     _html("<div class='subsection-title'>Transcript</div>")
-    transcript = result.get("recognized_text", "") if result is not None else ""
+    if result is None:
+        st.text_area("Transcript (ASR)", value="", height=118, disabled=True)
+        return
     
+    transcript = result.get("recognized_text", "")
     st.text_area(
         "Transcript (ASR)",
         value=transcript,
@@ -341,7 +344,7 @@ def _render_transcript_block(result: dict[str, Any]| None) -> None:
     )
 
 
-def _render_translation_block(result: dict[str, Any]) -> None:
+def _render_translation_block(result: dict[str, Any] | None) -> None:
     _html("<div class='subsection-title'>Polish output</div>")
 
     if result is None:
