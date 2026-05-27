@@ -79,13 +79,13 @@ def render_sidebar_controls() -> SidebarState:
             analyze_clicked = st.button(
                 "Run analysis",
                 type="primary",
-                use_container_width=True,
+                width='stretch',
             )
         else:
             run_comparison_clicked = st.button(
                 "Run benchmark on dataset",
                 type="primary",
-                use_container_width=True,
+                width='stretch',
             )
             st.caption("This mode shows charts from your benchmark runs.")
 
@@ -140,7 +140,7 @@ def render_comparison_dashboard(
 
     if leaderboard_rows:
         st.markdown("#### Leaderboard")
-        st.dataframe(leaderboard_rows, use_container_width=True, hide_index=True)
+        st.dataframe(leaderboard_rows, width='stretch', hide_index=True)
         render_model_comparison_charts(
             leaderboard_rows=leaderboard_rows,
             detailed_rows=detailed_rows,
