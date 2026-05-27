@@ -13,7 +13,9 @@ from reference_texts import get_reference_by_file_name, load_reference_catalog
 from ui.translation_engine import translate_ru_text_to_polish
 
 try:
-    from unidecode import unidecode as _transliterate
+    from unidecode import unidecode
+    def _transliterate(text: str) -> str:
+        return unidecode(text)
 except Exception:
     def _transliterate(text: str) -> str:
         return text
