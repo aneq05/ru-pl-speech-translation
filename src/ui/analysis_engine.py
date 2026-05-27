@@ -11,6 +11,7 @@ from benchmarking.model_registry import create_model
 from benchmarking.models.base import ASRModel
 from reference_texts import get_reference_by_file_name, load_reference_catalog
 from ui.translation_engine import translate_ru_text_to_polish
+from benchmarking.models.whisper_adapter import WhisperASRModel
 
 try:
     from unidecode import unidecode
@@ -40,7 +41,15 @@ def analyze_uploaded_audio(
     temp_path = _write_temp_audio(audio_bytes, audio_file_name=getattr(audio_file, "name", "upload.wav"))
     try:
         model = _get_analysis_model(language=language, device=device)
-        prediction = model.transcribe(temp_path)
+        if isinstance(model, WhisperASRModel):
+            prediction = model.transcribe(
+                temp_path,
+                language="ru",
+                condition_on_previous_text=False,
+                temperature=0.0
+            )
+        else:
+            prediction = model.transcribe(temp_path)
     finally:
         temp_path.unlink(missing_ok=True)
 

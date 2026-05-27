@@ -303,11 +303,17 @@ def _render_word_stream(result: dict[str, Any] | None) -> None:
         columns = st.columns(len(row_items), gap="small")
         for offset, (column, segment) in enumerate(zip(columns, row_items, strict=False), start=1):
             order = start + offset
-            confidence = int(segment["confidence"] * 100)
+
+            raw_confidence = segment.get("confidence")
+            if raw_confidence is None:
+                raw_confidence = 0.5
+
+            confidence_percent = int(raw_confidence * 100)
+
             with column:
                 st.markdown(f"**{order:02d}. {segment['word']}**")
-                st.progress(segment["confidence"])
-                st.caption(f"confidence: {confidence}%")
+                st.progress(float(raw_confidence))
+                st.caption(f"confidence: {confidence_percent}%")
 
 
 def _render_transcript_block(result: dict[str, Any] | None) -> None:
