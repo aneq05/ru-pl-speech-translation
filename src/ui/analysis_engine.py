@@ -41,8 +41,9 @@ def analyze_uploaded_audio(
     temp_path = _write_temp_audio(audio_bytes, audio_file_name=getattr(audio_file, "name", "upload.wav"))
     try:
         model = _get_analysis_model(language=language, device=device)
-        if isinstance(model, WhisperASRModel):
-            prediction = model.transcribe(
+        if model.__class__.__name__ == "WhisperASRModel" or isinstance(model, WhisperASRModel):
+            transcribe_fn = getattr(model, "transcribe")
+            prediction = transcribe_fn(
                 temp_path,
                 language="ru",
                 condition_on_previous_text=False,
@@ -50,6 +51,8 @@ def analyze_uploaded_audio(
             )
         else:
             prediction = model.transcribe(temp_path)
+    except Exception as e:
+        raise RuntimeError(f"ASR transcription failed: {e}")
     finally:
         temp_path.unlink(missing_ok=True)
 

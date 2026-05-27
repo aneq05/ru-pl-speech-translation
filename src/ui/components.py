@@ -302,14 +302,14 @@ def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
     _html("</section>")
 
 
-def _render_word_stream(result: dict[str, Any] | None) -> None:
+def _render_word_stream(result: dict[str, Any]) -> None:
     _html("<div class='result-title'>Recognized Russian words</div>")
 
-    if result is None:
-        _html("<div class='soft-box'>Waiting for analysis result.</div>")
+    words = result.get("segments", [])
+    if not words:
+        _html("<div class='soft-box'>No word segments found.</div>")
         return
-
-    words = result["segments"]
+    
     per_row = 4
     for start in range(0, len(words), per_row):
         row_items = words[start : start + per_row]
@@ -336,16 +336,13 @@ def _render_transcript_block(result: dict[str, Any]) -> None:
         "Transcript (ASR)",
         value=transcript,
         height=118,
-        disabled=result is None,
+        disabled=False,
     )
 
 
 def _render_translation_block(result: dict[str, Any]) -> None:
     _html("<div class='subsection-title'>Polish output</div>")
-    if result is None:
-        _html("<div class='soft-box'>Waiting for translation result.</div>")
-        return
-
+    
     source = str(result.get("translation_source", "")).strip()
     if source == "reference_catalog":
         st.caption("Source: reference catalog translation")
@@ -360,7 +357,8 @@ def _render_translation_block(result: dict[str, Any]) -> None:
     elif source:
         st.caption(f"Source: {source}")
 
-    translation_text = result["translation"]
+    translation_text = result.get("translation", "")
+    
     if source == "translation_model_unavailable":
         _html(
             "<div class='soft-box'>Translation model unavailable. Install `transformers`, `torch`, and "
