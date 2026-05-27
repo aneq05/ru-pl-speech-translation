@@ -149,7 +149,7 @@ def render_comparison_dashboard(
             safe_rows.append(safe_row)
 
         st.dataframe(safe_rows, width='stretch', hide_index=True)
-        
+
         render_model_comparison_charts(
             leaderboard_rows=leaderboard_rows,
             detailed_rows=detailed_rows,
@@ -285,6 +285,10 @@ def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
             <h2 class="section-title">Recognition and Translation</h2>
         """
     )
+    if result is None:
+        _html("<div class='soft-box'>Waiting for analysis result.</div>")
+        _html("</section>")
+        return
 
     _render_word_stream(result)
 
@@ -325,9 +329,9 @@ def _render_word_stream(result: dict[str, Any] | None) -> None:
                 st.caption(f"confidence: {confidence_percent}%")
 
 
-def _render_transcript_block(result: dict[str, Any] | None) -> None:
+def _render_transcript_block(result: dict[str, Any]) -> None:
     _html("<div class='subsection-title'>Transcript</div>")
-    transcript = "" if result is None else result["recognized_text"]
+    transcript = result.get("recognized_text", "")
     st.text_area(
         "Transcript (ASR)",
         value=transcript,
@@ -336,7 +340,7 @@ def _render_transcript_block(result: dict[str, Any] | None) -> None:
     )
 
 
-def _render_translation_block(result: dict[str, Any] | None) -> None:
+def _render_translation_block(result: dict[str, Any]) -> None:
     _html("<div class='subsection-title'>Polish output</div>")
     if result is None:
         _html("<div class='soft-box'>Waiting for translation result.</div>")
