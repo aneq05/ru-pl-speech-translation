@@ -347,7 +347,8 @@ def _build_quality_grouped_bar(rows: list[dict[str, Any]], go: Any) -> Any:
         title = dict(
             y = 0.98,
             yanchor = "top"
-        )
+        ),
+        
         legend=dict(
             orientation="h",
             yanchor="bottom",
