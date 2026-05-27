@@ -336,12 +336,13 @@ def _build_quality_grouped_bar(rows: list[dict[str, Any]], go: Any) -> Any:
         xaxis_title="Model",
         bargap=0.16,
     )
-    # figure.update_xaxes(tickangle=-23, tickfont=dict(size=11)) 
-    return apply_dark_pink_theme(
+    fig = apply_dark_pink_theme(
         figure,
         title="Model quality metrics (WER/CER lower is better)",
         height=360,
     )
+    fig.update_layout(showlegend=False)
+    return fig
 
 
 def _build_quality_speed_scatter(rows: list[dict[str, Any]], go: Any) -> Any:
