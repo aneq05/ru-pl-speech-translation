@@ -285,11 +285,7 @@ def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
             <h2 class="section-title">Recognition and Translation</h2>
         """
     )
-    if result is None:
-        _html("<div class='soft-box'>Waiting for analysis result.</div>")
-        _html("</section>")
-        return
-
+    
     _render_word_stream(result)
 
     # CREATE TWO COLUMNS FOR SIDE-BY-SIDE COMPARISON
@@ -302,9 +298,13 @@ def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
     _html("</section>")
 
 
-def _render_word_stream(result: dict[str, Any]) -> None:
+def _render_word_stream(result: dict[str, Any]| None) -> None:
     _html("<div class='result-title'>Recognized Russian words</div>")
-
+    
+    if result is None:
+        _html("<div class='soft-box'>Waiting for analysis result.</div>")
+        return
+    
     words = result.get("segments", [])
     if not words:
         _html("<div class='soft-box'>No word segments found.</div>")
@@ -329,19 +329,24 @@ def _render_word_stream(result: dict[str, Any]) -> None:
                 st.caption(f"confidence: {confidence_percent}%")
 
 
-def _render_transcript_block(result: dict[str, Any]) -> None:
+def _render_transcript_block(result: dict[str, Any]| None) -> None:
     _html("<div class='subsection-title'>Transcript</div>")
-    transcript = result.get("recognized_text", "")
+    transcript = result.get("recognized_text", "") if result is not None else ""
+    
     st.text_area(
         "Transcript (ASR)",
         value=transcript,
         height=118,
-        disabled=False,
+        disabled=(result is None),
     )
 
 
 def _render_translation_block(result: dict[str, Any]) -> None:
     _html("<div class='subsection-title'>Polish output</div>")
+
+    if result is None:
+        st.text_area("Polish translation", value="", height=90, disabled=True)
+        return
     
     source = str(result.get("translation_source", "")).strip()
     if source == "reference_catalog":
@@ -358,7 +363,7 @@ def _render_translation_block(result: dict[str, Any]) -> None:
         st.caption(f"Source: {source}")
 
     translation_text = result.get("translation", "")
-    
+
     if source == "translation_model_unavailable":
         _html(
             "<div class='soft-box'>Translation model unavailable. Install `transformers`, `torch`, and "
