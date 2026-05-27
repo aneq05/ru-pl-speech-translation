@@ -56,7 +56,18 @@ def analyze_uploaded_audio(
     finally:
         temp_path.unlink(missing_ok=True)
 
-    recognized_text = (prediction.text or "").strip()
+    if isinstance(prediction, dict):
+        recognized_text = str(prediction.get("text", "")).strip()
+        raw_segments = prediction.get("segments", [])
+        detected_language = prediction.get("language", "ru")
+        raw_confidence = prediction.get("confidence", None)
+    else:
+        recognized_text = str(getattr(prediction, "text", "")).strip()
+        raw_segments = getattr(prediction, "segments", [])
+        detected_language = getattr(prediction, "language", "ru")
+        raw_confidence = getattr(prediction, "confidence", None)
+
+    
     polish_output, translation_source = _resolve_polish_output(
         file_name=getattr(audio_file, "name", ""),
         recognized_text=recognized_text,
@@ -66,9 +77,9 @@ def analyze_uploaded_audio(
     return {
         "file_name": getattr(audio_file, "name", temp_path.name),
         "model_id": ANALYSIS_MODEL_ID,
-        "detected_language": prediction.language or "ru",
-        "confidence": _resolve_confidence(prediction.confidence),
-        "segments": _flatten_word_segments(prediction.segments, fallback_text=recognized_text),
+        "detected_language": detected_language or "ru",
+        "confidence": _resolve_confidence(raw_confidence),
+        "segments": _flatten_word_segments(raw_segments, fallback_text=recognized_text),
         "recognized_text": recognized_text,
         "translation": polish_output,
         "translation_source": translation_source,
@@ -190,13 +201,22 @@ def _token_overlap(left: set[str], right: set[str]) -> float:
 
 
 def _flatten_word_segments(segments: list[Any], *, fallback_text: str) -> list[dict[str, Any]]:
+    if not segments:
+        segments = []
+    
     words: list[dict[str, Any]] = []
     order = 0
     for segment in segments:
-        text = str(getattr(segment, "text", "")).strip()
+        if isinstance(segment, dict):
+            text = str(segment.get("text", "")).strip()
+            confidence = _resolve_confidence(segment.get("confidence", None))
+        else:
+            text = str(getattr(segment, "text", "")).strip()
+            confidence = _resolve_confidence(getattr(segment, "confidence", None))
+
         if not text:
             continue
-        confidence = _resolve_confidence(getattr(segment, "confidence", None))
+        
         for token in _TOKEN_PATTERN.findall(text):
             order += 1
             words.append(

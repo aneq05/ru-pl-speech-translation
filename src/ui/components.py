@@ -279,12 +279,8 @@ def render_audio_waveform(audio_file: Any) -> None:
 
 
 def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
-    _html(
-        """
-        <section class="section-panel center-stage">
-            <h2 class="section-title">Recognition and Translation</h2>
-        """
-    )
+    st.markdown("---")
+    st.markdown("## Recognition and Translation")
     
     _render_word_stream(result)
 
@@ -314,7 +310,7 @@ def _render_word_stream(result: dict[str, Any]| None) -> None:
     for start in range(0, len(words), per_row):
         row_items = words[start : start + per_row]
         columns = st.columns(len(row_items), gap="small")
-        for offset, (column, segment) in enumerate(zip(columns, row_items, strict=False), start=1):
+        for offset, (column, segment) in enumerate(zip(columns, row_items), start=1):
             order = start + offset
 
             raw_confidence = segment.get("confidence")
