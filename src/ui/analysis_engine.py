@@ -20,7 +20,7 @@ except Exception:
     def _transliterate(text: str) -> str:
         return text
 
-ANALYSIS_MODEL_ID = "whisper:base"
+ANALYSIS_MODEL_ID = "whisper:small"
 DEFAULT_LANGUAGE = "ru"
 DEFAULT_DEVICE = "cpu"
 
