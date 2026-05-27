@@ -342,8 +342,20 @@ def _build_quality_grouped_bar(rows: list[dict[str, Any]], go: Any) -> Any:
         height=360,
     )
     fig.update_layout(
-        margin_t=130,
-        showlegend=False
+        margin_t=90,
+        showlegend=True,
+        title = dict(
+            y = 0.98,
+            yanchor = "top"
+        )
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0.01,
+            font = dict(size=10)
+        )
     )
     return fig
 
