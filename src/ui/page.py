@@ -205,7 +205,7 @@ def run_app() -> None:
     sidebar_state: SidebarState = render_sidebar_controls()
     _handle_actions(sidebar_state)
 
-    result: dict[str, Any] | None = st.session_state.analysis_result
+    result = st.session_state.get("analysis_result", None)
 
     left, center, right = st.columns([0.14, 1.72, 0.14], gap="small")
     with center:

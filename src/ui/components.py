@@ -79,13 +79,13 @@ def render_sidebar_controls() -> SidebarState:
             analyze_clicked = st.button(
                 "Run analysis",
                 type="primary",
-                use_container_width=True,
+                width='stretch',
             )
         else:
             run_comparison_clicked = st.button(
                 "Run benchmark on dataset",
                 type="primary",
-                use_container_width=True,
+                width='stretch',
             )
             st.caption("This mode shows charts from your benchmark runs.")
 
@@ -140,7 +140,16 @@ def render_comparison_dashboard(
 
     if leaderboard_rows:
         st.markdown("#### Leaderboard")
-        st.dataframe(leaderboard_rows, use_container_width=True, hide_index=True)
+
+        safe_rows = []
+        for row in leaderboard_rows:
+            safe_row = {}
+            for key, value in row.items():
+                safe_row[key] = None if value == "" else value
+            safe_rows.append(safe_row)
+
+        st.dataframe(safe_rows, width='stretch', hide_index=True)
+
         render_model_comparison_charts(
             leaderboard_rows=leaderboard_rows,
             detailed_rows=detailed_rows,
@@ -270,13 +279,9 @@ def render_audio_waveform(audio_file: Any) -> None:
 
 
 def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
-    _html(
-        """
-        <section class="section-panel center-stage">
-            <h2 class="section-title">Recognition and Translation</h2>
-        """
-    )
-
+    st.markdown("---")
+    st.markdown("## Recognition and Translation")
+    
     _render_word_stream(result)
 
     # CREATE TWO COLUMNS FOR SIDE-BY-SIDE COMPARISON
@@ -286,47 +291,61 @@ def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
     with col2:
         _render_translation_block(result)
 
-    _html("</section>")
 
 
-def _render_word_stream(result: dict[str, Any] | None) -> None:
+def _render_word_stream(result: dict[str, Any]| None) -> None:
     _html("<div class='result-title'>Recognized Russian words</div>")
-
+    
     if result is None:
         _html("<div class='soft-box'>Waiting for analysis result.</div>")
         return
-
-    words = result["segments"]
+    
+    words = result.get("segments", [])
+    if not words:
+        _html("<div class='soft-box'>No word segments found.</div>")
+        return
+    
     per_row = 4
     for start in range(0, len(words), per_row):
         row_items = words[start : start + per_row]
         columns = st.columns(len(row_items), gap="small")
-        for offset, (column, segment) in enumerate(zip(columns, row_items, strict=False), start=1):
+        for offset, (column, segment) in enumerate(zip(columns, row_items), start=1):
             order = start + offset
-            confidence = int(segment["confidence"] * 100)
+
+            raw_confidence = segment.get("confidence")
+            if raw_confidence is None:
+                raw_confidence = 0.5
+
+            confidence_percent = int(raw_confidence * 100)
+
             with column:
                 st.markdown(f"**{order:02d}. {segment['word']}**")
-                st.progress(segment["confidence"])
-                st.caption(f"confidence: {confidence}%")
+                st.progress(float(raw_confidence))
+                st.caption(f"confidence: {confidence_percent}%")
 
 
-def _render_transcript_block(result: dict[str, Any] | None) -> None:
+def _render_transcript_block(result: dict[str, Any]| None) -> None:
     _html("<div class='subsection-title'>Transcript</div>")
-    transcript = "" if result is None else result["recognized_text"]
+    if result is None:
+        st.text_area("Transcript (ASR)", value="", height=118, disabled=True)
+        return
+    
+    transcript = result.get("recognized_text", "")
     st.text_area(
         "Transcript (ASR)",
         value=transcript,
         height=118,
-        disabled=result is None,
+        disabled=(result is None),
     )
 
 
 def _render_translation_block(result: dict[str, Any] | None) -> None:
     _html("<div class='subsection-title'>Polish output</div>")
-    if result is None:
-        _html("<div class='soft-box'>Waiting for translation result.</div>")
-        return
 
+    if result is None:
+        st.text_area("Polish translation", value="", height=90, disabled=True)
+        return
+    
     source = str(result.get("translation_source", "")).strip()
     if source == "reference_catalog":
         st.caption("Source: reference catalog translation")
@@ -341,7 +360,8 @@ def _render_translation_block(result: dict[str, Any] | None) -> None:
     elif source:
         st.caption(f"Source: {source}")
 
-    translation_text = result["translation"]
+    translation_text = result.get("translation", "")
+
     if source == "translation_model_unavailable":
         _html(
             "<div class='soft-box'>Translation model unavailable. Install `transformers`, `torch`, and "

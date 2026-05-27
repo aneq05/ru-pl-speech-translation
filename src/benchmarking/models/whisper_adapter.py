@@ -34,17 +34,25 @@ class WhisperASRModel(ASRModel):
 
         self._model = whisper.load_model(model_size, device=device, download_root=str(self.download_root))
 
-    def transcribe(self, audio_path: Path) -> ASRPrediction:
+    def transcribe(self, audio_path: Path, **kwargs) -> ASRPrediction:
         audio_array = _load_audio_mono(audio_path, target_sampling_rate=16_000)
+
+        transcribe_kwargs = {
+            "task": "transcribe",
+            "language": self.language,
+            "fp16": self.device != "cpu",
+            "verbose": False,
+        }
+        transcribe_kwargs.update(kwargs)
+
         result: dict[str, Any] = self._model.transcribe(
             audio_array,
-            task="transcribe",
-            language=self.language,
-            fp16=self.device != "cpu",
-            verbose=False,
+            **transcribe_kwargs
         )
+        
         segments = _segments_from_whisper(result.get("segments", []))
         confidence = _mean_confidence(segments)
+
         return ASRPrediction(
             text=(result.get("text") or "").strip(),
             language=result.get("language"),

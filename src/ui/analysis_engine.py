@@ -11,14 +11,17 @@ from benchmarking.model_registry import create_model
 from benchmarking.models.base import ASRModel
 from reference_texts import get_reference_by_file_name, load_reference_catalog
 from ui.translation_engine import translate_ru_text_to_polish
+from benchmarking.models.whisper_adapter import WhisperASRModel
 
 try:
-    from unidecode import unidecode as _transliterate
+    from unidecode import unidecode
+    def _transliterate(text: str) -> str:
+        return unidecode(text)
 except Exception:
     def _transliterate(text: str) -> str:
         return text
 
-ANALYSIS_MODEL_ID = "whisper:base"
+ANALYSIS_MODEL_ID = "whisper:small"
 DEFAULT_LANGUAGE = "ru"
 DEFAULT_DEVICE = "cpu"
 
@@ -38,11 +41,26 @@ def analyze_uploaded_audio(
     temp_path = _write_temp_audio(audio_bytes, audio_file_name=getattr(audio_file, "name", "upload.wav"))
     try:
         model = _get_analysis_model(language=language, device=device)
-        prediction = model.transcribe(temp_path)
+        if model.__class__.__name__ == "WhisperASRModel" or isinstance(model, WhisperASRModel):
+            transcribe_fn = getattr(model, "transcribe")
+            prediction = transcribe_fn(
+                temp_path,
+                language="ru",
+                condition_on_previous_text=False,
+                temperature=0.0
+            )
+        else:
+            prediction = model.transcribe(temp_path)
+    except Exception as e:
+        raise RuntimeError(f"ASR transcription failed: {e}")
     finally:
         temp_path.unlink(missing_ok=True)
 
-    recognized_text = (prediction.text or "").strip()
+    recognized_text = (getattr(prediction, "text", "") or "").strip()
+    detected_language = getattr(prediction, "language", "ru")
+    raw_confidence = getattr(prediction, "confidence", None)
+    raw_segments = getattr(prediction, "segments", [])
+
     polish_output, translation_source = _resolve_polish_output(
         file_name=getattr(audio_file, "name", ""),
         recognized_text=recognized_text,
@@ -52,9 +70,9 @@ def analyze_uploaded_audio(
     return {
         "file_name": getattr(audio_file, "name", temp_path.name),
         "model_id": ANALYSIS_MODEL_ID,
-        "detected_language": prediction.language or "ru",
-        "confidence": _resolve_confidence(prediction.confidence),
-        "segments": _flatten_word_segments(prediction.segments, fallback_text=recognized_text),
+        "detected_language": detected_language or "ru",
+        "confidence": _resolve_confidence(raw_confidence),
+        "segments": _flatten_word_segments(raw_segments, fallback_text=recognized_text),
         "recognized_text": recognized_text,
         "translation": polish_output,
         "translation_source": translation_source,
@@ -176,13 +194,22 @@ def _token_overlap(left: set[str], right: set[str]) -> float:
 
 
 def _flatten_word_segments(segments: list[Any], *, fallback_text: str) -> list[dict[str, Any]]:
+    if not segments:
+        segments = []
+    
     words: list[dict[str, Any]] = []
     order = 0
     for segment in segments:
-        text = str(getattr(segment, "text", "")).strip()
+        if isinstance(segment, dict):
+            text = str(segment.get("text", "")).strip()
+            confidence = _resolve_confidence(segment.get("confidence", None))
+        else:
+            text = str(getattr(segment, "text", "")).strip()
+            confidence = _resolve_confidence(getattr(segment, "confidence", None))
+
         if not text:
             continue
-        confidence = _resolve_confidence(getattr(segment, "confidence", None))
+        
         for token in _TOKEN_PATTERN.findall(text):
             order += 1
             words.append(
