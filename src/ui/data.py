@@ -10,7 +10,7 @@ MIC = "\U0001F399\ufe0f"
 BUBBLE = "\U0001FAE7"
 LETTERS = "\U0001F520"
 NOTE = "\U0001F4DD"
-HEART = "\U0001F497"
+FLAG_PL = "\U0001F1F5\U0001F1F1"
 
 
 # Default fallback reference with proper Cyrillic and Polish alphabets
@@ -27,7 +27,7 @@ def build_flow_steps(has_audio: bool, has_result: bool) -> list[dict[str, str]]:
         {"icon": BUBBLE, "title": "ASR", "detail": "Speech decoding"},
         {"icon": LETTERS, "title": "Words", "detail": "Word sequence"},
         {"icon": NOTE, "title": "Transcript", "detail": "Sentence assembly"},
-        {"icon": HEART, "title": "PL", "detail": "Polish output"},
+        {"icon": FLAG_PL, "title": "PL", "detail": "Polish output"},
     ]
 
     if has_result:
