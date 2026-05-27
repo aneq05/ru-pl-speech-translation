@@ -47,12 +47,12 @@ class WhisperASRModel(ASRModel):
 
         result: dict[str, Any] = self._model.transcribe(
             audio_array,
-            task="transcribe",
             **transcribe_kwargs
         )
-        segments = _segments_from_whisper(result.get("segments", []))
         
+        segments = _segments_from_whisper(result.get("segments", []))
         confidence = _mean_confidence(segments)
+
         return ASRPrediction(
             text=(result.get("text") or "").strip(),
             language=result.get("language"),

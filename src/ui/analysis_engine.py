@@ -43,7 +43,12 @@ def analyze_uploaded_audio(
         model = _get_analysis_model(language=language, device=device)
         if model.__class__.__name__ == "WhisperASRModel" or isinstance(model, WhisperASRModel):
             transcribe_fn = getattr(model, "transcribe")
-            prediction = model.transcribe(temp_path)
+            prediction = transcribe_fn(
+                temp_path,
+                language="ru",
+                condition_on_previous_text=False,
+                temperature=0.0
+            )
         else:
             prediction = model.transcribe(temp_path)
     except Exception as e:
@@ -51,18 +56,11 @@ def analyze_uploaded_audio(
     finally:
         temp_path.unlink(missing_ok=True)
 
-    if isinstance(prediction, dict):
-        recognized_text = str(prediction.get("text", "")).strip()
-        raw_segments = prediction.get("segments", [])
-        detected_language = prediction.get("language", "ru")
-        raw_confidence = prediction.get("confidence", None)
-    else:
-        recognized_text = str(getattr(prediction, "text", "")).strip()
-        raw_segments = getattr(prediction, "segments", [])
-        detected_language = getattr(prediction, "language", "ru")
-        raw_confidence = getattr(prediction, "confidence", None)
+    recognized_text = (getattr(prediction, "text", "") or "").strip()
+    detected_language = getattr(prediction, "language", "ru")
+    raw_confidence = getattr(prediction, "confidence", None)
+    raw_segments = getattr(prediction, "segments", [])
 
-    
     polish_output, translation_source = _resolve_polish_output(
         file_name=getattr(audio_file, "name", ""),
         recognized_text=recognized_text,
