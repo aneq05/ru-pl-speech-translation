@@ -58,7 +58,7 @@ def render_model_comparison_charts(
         st.warning("Missing numeric data in leaderboard, so interactive charts cannot be rendered.")
         return
 
-    st.markdown("#### Interactive comparison charts")
+    st.markdown("##### Interactive comparison charts")
     _render_highlight_metrics(cleaned_leaderboard)
     ranked_models = _build_model_ranking(cleaned_leaderboard)
     _render_model_ranking(ranked_models)
@@ -72,7 +72,7 @@ def _render_chart_gallery(
 ) -> None:
     st.markdown("#### Chart gallery")
     st.caption(
-        "Compact pink cards. Open a card to inspect an interactive chart, "
+        "Click the arrow on a card to expand an interactive chart, "
         "then use fullscreen in the chart toolbar for a larger view."
     )
 
@@ -111,15 +111,12 @@ def _render_chart_gallery(
     for index, chart in enumerate(chart_cards):
         target_column = left_column if index % 2 == 0 else right_column
         with target_column:
-            st.markdown(
-                _build_chart_card_header(
-                    badge=str(chart["badge"]),
-                    title=str(chart["title"]),
-                    subtitle=str(chart["subtitle"]),
-                ),
-                unsafe_allow_html=True,
+            label = _build_chart_expander_label(
+                badge=str(chart["badge"]),
+                title=str(chart["title"]),
+                subtitle=str(chart["subtitle"]),
             )
-            with st.expander(f"Open chart {chart['badge']}: {chart['title']}", expanded=False):
+            with st.expander(label, expanded=False):
                 figure = chart["figure"]
                 if figure is None:
                     st.info(str(chart["missing_message"]))
@@ -131,17 +128,11 @@ def _render_chart_gallery(
                     )
 
 
-def _build_chart_card_header(*, badge: str, title: str, subtitle: str) -> str:
+def _build_chart_expander_label(*, badge: str, title: str, subtitle: str) -> str:
+    safe_badge = escape(badge)
     safe_title = escape(title)
     safe_subtitle = escape(subtitle)
-    safe_badge = escape(badge)
-    return (
-        "<div class='chart-launcher-card'>"
-        f"<span class='chart-launcher-badge'>{safe_badge}</span>"
-        f"<div class='chart-launcher-title'>{safe_title}</div>"
-        f"<div class='chart-launcher-subtitle'>{safe_subtitle}</div>"
-        "</div>"
-    )
+    return f"**[{safe_badge}] {safe_title}**\n\n*{safe_subtitle}*"
 
 
 def _plotly_chart_config() -> dict[str, Any]:
@@ -189,7 +180,7 @@ def _render_highlight_metrics(rows: list[dict[str, Any]]) -> None:
     best_f1 = _pick_best(rows, "token_f1_mean", lower_is_better=False)
     fastest = _pick_best(rows, "latency_sec_mean", lower_is_better=True)
 
-    col_1, col_2, col_3 = st.columns(3, gap="medium")
+    _, col_1, col_2, col_3, _ = st.columns([0.14, 1, 1, 1, 0.14], gap="medium")
     with col_1:
         if best_wer is None:
             st.metric("Best WER", "n/a")

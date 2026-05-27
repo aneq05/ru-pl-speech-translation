@@ -365,6 +365,26 @@ def inject_styles() -> None:
                 border-radius: 16px;
                 background: rgba(255, 20, 147, 0.1);
                 padding: 0.28rem 0.44rem;
+                text-align: center;
+            }
+
+            div[data-testid="stMetricLabel"] {
+                justify-content: center;
+            }
+
+            div[data-testid="stMetricLabel"] p {
+                font-size: 1rem;
+            }
+
+            div[data-testid="stMetricValue"] > div {
+                justify-content: center;
+                font-size: 2.15rem;
+                line-height: 1.1;
+            }
+
+            div[data-testid="stMetricDelta"] > div {
+                justify-content: center;
+                font-size: 1.04rem;
             }
 
             .winner-card {
@@ -409,48 +429,11 @@ def inject_styles() -> None:
                 font-weight: 600;
             }
 
-            .chart-launcher-card {
-                border: 1px solid rgba(255, 20, 147, 0.45);
-                border-radius: 18px;
-                background: rgba(255, 20, 147, 0.12);
-                padding: 0.62rem 0.74rem 0.56rem 0.74rem;
-                margin: 0.35rem 0 0.42rem 0;
-                box-shadow: inset 0 0 0 1px rgba(255, 20, 147, 0.14);
-            }
-
-            .chart-launcher-badge {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                width: 30px;
-                height: 30px;
-                border-radius: 999px;
-                border: 1px solid rgba(255, 20, 147, 0.78);
-                background: rgba(255, 20, 147, 0.3);
-                color: #ffe8f7;
-                font-size: 0.78rem;
-                font-weight: 700;
-                margin-bottom: 0.38rem;
-            }
-
-            .chart-launcher-title {
-                color: #fff2fa;
-                font-size: 0.97rem;
-                font-weight: 700;
-                line-height: 1.25;
-            }
-
-            .chart-launcher-subtitle {
-                margin-top: 0.24rem;
-                color: #ffd2ea;
-                font-size: 0.82rem;
-                line-height: 1.28;
-            }
-
             div[data-testid="stExpander"] {
                 border: 1px solid rgba(255, 20, 147, 0.45);
                 border-radius: 18px;
-                background: rgba(255, 20, 147, 0.07);
+                background: rgba(255, 20, 147, 0.1);
+                box-shadow: inset 0 0 0 1px rgba(255, 20, 147, 0.14);
                 margin-bottom: 0.95rem;
                 overflow: hidden;
             }
@@ -461,13 +444,40 @@ def inject_styles() -> None:
 
             div[data-testid="stExpander"] summary {
                 background: rgba(255, 20, 147, 0.12);
+                transition: background 0.18s ease;
+            }
+
+            div[data-testid="stExpander"] summary:hover {
+                background: rgba(255, 20, 147, 0.17);
+            }
+
+            div[data-testid="stExpander"] details[open] summary {
                 border-bottom: 1px solid rgba(255, 20, 147, 0.32);
             }
 
             div[data-testid="stExpander"] summary p {
                 color: #ffe8f6;
+                font-weight: 600;
+                font-size: 0.86rem;
+                line-height: 1.32;
+                white-space: pre-line;
+            }
+
+            div[data-testid="stExpander"] summary p strong {
+                display: block;
+                margin-top: 0.14rem;
+                color: #fff3fb;
                 font-weight: 700;
-                font-size: 0.88rem;
+                font-size: 1rem;
+            }
+
+            div[data-testid="stExpander"] summary p em {
+                display: block;
+                margin-top: 0.22rem;
+                color: #ffd2ea;
+                font-style: normal;
+                font-size: 0.82rem;
+                font-weight: 500;
             }
 
             .chart-preview-card {
