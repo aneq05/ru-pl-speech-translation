@@ -140,7 +140,16 @@ def render_comparison_dashboard(
 
     if leaderboard_rows:
         st.markdown("#### Leaderboard")
-        st.dataframe(leaderboard_rows, width='stretch', hide_index=True)
+
+        safe_rows = []
+        for row in leaderboard_rows:
+            safe_row = {}
+            for key, value in row.items():
+                safe_row[key] = None if value == "" else value
+            safe_rows.append(safe_row)
+
+        st.dataframe(safe_rows, width='stretch', hide_index=True)
+        
         render_model_comparison_charts(
             leaderboard_rows=leaderboard_rows,
             detailed_rows=detailed_rows,
