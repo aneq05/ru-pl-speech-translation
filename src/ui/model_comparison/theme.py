@@ -25,7 +25,11 @@ MODEL_COLORS = [
 
 def apply_dark_pink_theme(fig: Any, *, title: str, height: int = 430) -> Any:
     fig.update_layout(
-        title=dict(text=title, font=dict(size=16, color=TEXT)),
+        title=dict(
+            text=title, 
+            font=dict(size=16, color=TEXT),
+            pad=dict(l = 15)
+        ),
         height=height,
         paper_bgcolor=BG_CARD,
         plot_bgcolor=BG_PLOT,
