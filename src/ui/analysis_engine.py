@@ -43,12 +43,7 @@ def analyze_uploaded_audio(
         model = _get_analysis_model(language=language, device=device)
         if model.__class__.__name__ == "WhisperASRModel" or isinstance(model, WhisperASRModel):
             transcribe_fn = getattr(model, "transcribe")
-            prediction = transcribe_fn(
-                temp_path,
-                language="ru",
-                condition_on_previous_text=False,
-                temperature=0.0
-            )
+            prediction = model.transcribe(temp_path)
         else:
             prediction = model.transcribe(temp_path)
     except Exception as e:

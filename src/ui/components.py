@@ -291,7 +291,6 @@ def render_recognition_and_translation(result: dict[str, Any] | None) -> None:
     with col2:
         _render_translation_block(result)
 
-    _html("</section>")
 
 
 def _render_word_stream(result: dict[str, Any]| None) -> None:
