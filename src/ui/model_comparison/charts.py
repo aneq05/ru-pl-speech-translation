@@ -341,7 +341,10 @@ def _build_quality_grouped_bar(rows: list[dict[str, Any]], go: Any) -> Any:
         title="Model quality metrics (WER/CER lower is better)",
         height=360,
     )
-    fig.update_layout(showlegend=False)
+    fig.update_layout(
+        margin_t=130,
+        showlegend=False
+    )
     return fig
 
 
