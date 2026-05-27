@@ -46,12 +46,11 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-`requirements.txt` includes UI and plotting dependencies. Core runtime requirements include:
+`requirements.txt` includes UI and plotting dependencies. By default it installs the lightweight UI stack:
 
-- `streamlit`, `soundfile`, `numpy`, `plotly` (UI/visualization)
-- `openai-whisper` (ASR model adapter used by default `whisper:<size>` models)
+- `streamlit`, `soundfile`, `numpy`, `plotly`, `librosa`, `unidecode` (UI/visualization + helpers)
 
-For model backends and the RU->PL translation fallback install:
+For full ASR + translation functionality (Analysis mode + Whisper benchmark models), install optional backends:
 
 ```bash
 pip install openai-whisper transformers torch sentencepiece
@@ -143,7 +142,7 @@ Model id formats:
 - If a file has no reference text, it is skipped.
 - At least one valid `(audio + reference)` sample is required.
 
-If you want to analyze a single uploaded file that is not present in `data/raw`, the `Analysis` UI still runs ASR on the uploaded file and then attempts translation via the fallback logic (reference match → text-match → RU->PL model). If the translation model is unavailable, the UI will show an explanatory status message.
+If you want to analyze a single uploaded file that is not present in `data/raw`, the `Analysis` UI still runs ASR on the uploaded file and then attempts translation via the fallback logic (reference match -> text-match -> RU->PL model). If the translation model is unavailable, the UI will show an explanatory status message.
 
 Reference sources (priority):
 1. `labels.csv` / `references.csv` / `metadata.csv` in dataset root (`data/raw`) with file and text columns.
@@ -214,7 +213,7 @@ Key implementation files to inspect:
 
 - If the app shows `Translation model unavailable`, ensure `transformers`, `torch` and `sentencepiece` are installed and optionally set `HF_TOKEN` for private model access.
 - Local HF cache and downloaded models are stored under `models_cache/`. Pre-downloading models into this folder can speed up runs in air-gapped environments.
-- To run the Streamlit UI with a specific device, set `DEFAULT_DEVICE` in the app environment or configure CUDA/MPS availability for PyTorch.
+- Streamlit `Analysis` currently uses `DEFAULT_DEVICE = "cpu"` from `src/ui/analysis_engine.py` (it is not read from env yet). To change it, update that constant in code.
 - Logs and intermediate benchmark outputs are under `reports/` and `src/ui/model_comparison/results/`.
 
 ## Data link
