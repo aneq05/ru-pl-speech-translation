@@ -123,7 +123,7 @@ def _render_chart_gallery(
                 else:
                     st.plotly_chart(
                         figure,
-                        use_container_width=True,
+                        width="stretch",
                         config=_plotly_chart_config(),
                     )
 
@@ -163,7 +163,7 @@ def _clean_leaderboard_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if not model_id:
             continue
 
-        normalized = {"model_id": model_id}
+        normalized: dict[str, Any] = {"model_id": model_id}
         for metric_key, _ in QUALITY_METRICS:
             normalized[metric_key] = _to_float(row.get(metric_key))
 
@@ -290,7 +290,7 @@ def _render_model_ranking(ranked_models: list[dict[str, Any]]) -> None:
             }
         )
 
-    st.dataframe(ranking_table, use_container_width=True, hide_index=True)
+    st.dataframe(ranking_table, width="stretch", hide_index=True)
 
 
 def _pick_best(
@@ -336,7 +336,7 @@ def _build_quality_grouped_bar(rows: list[dict[str, Any]], go: Any) -> Any:
         xaxis_title="Model",
         bargap=0.16,
     )
-    figure.update_xaxes(tickangle=-23, tickfont=dict(size=11))
+    # figure.update_xaxes(tickangle=-23, tickfont=dict(size=11)) 
     return apply_dark_pink_theme(
         figure,
         title="Model quality metrics (WER/CER lower is better)",
@@ -436,7 +436,7 @@ def _build_wer_boxplot(detailed_rows: list[dict[str, Any]], go: Any) -> Any | No
         xaxis_title="Model",
         showlegend=False,
     )
-    figure.update_xaxes(tickangle=-20, tickfont=dict(size=11))
+    #(tickangle=-20, tickfont=dict(size=11))
     return apply_dark_pink_theme(figure, title="WER distribution across all samples", height=360)
 
 
@@ -449,8 +449,8 @@ def _build_normalized_heatmap(rows: list[dict[str, Any]], go: Any) -> Any:
 
     columns_raw: dict[str, list[float]] = {}
     for metric_key, _, _ in HEATMAP_METRICS:
-        values = [row.get(metric_key) for row in rows if row.get(metric_key) is not None]
-        columns_raw[metric_key] = [float(value) for value in values]
+        values = [row.get(metric_key) for row in rows]
+        columns_raw[metric_key] = [float(v) for v in values if v is not None]
 
     for row in rows:
         row_normalized: list[float] = []
@@ -492,7 +492,7 @@ def _build_normalized_heatmap(rows: list[dict[str, Any]], go: Any) -> Any:
         xaxis_title="Metric",
         yaxis_title="Model",
     )
-    figure.update_xaxes(tickangle=-24, tickfont=dict(size=11))
+    #figure.update_xaxes(tickangle=-24, tickfont=dict(size=11))
     return apply_dark_pink_theme(figure, title="Normalized model score heatmap (higher is better)", height=360)
 
 
