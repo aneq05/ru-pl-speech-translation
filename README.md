@@ -220,7 +220,6 @@ configs/                 benchmark model config
 data/raw/                local audio dataset (ignored except .gitkeep)
 data/reference_texts/    RU/PL reference catalog
 docs/presentation.pdf    project presentation
-docs/project_notes/      course notes and implementation notes
 reports/example_results/ tracked benchmark summary for README
 reports/results/         CLI benchmark outputs (ignored except .gitkeep)
 src/app.py               Streamlit entrypoint
