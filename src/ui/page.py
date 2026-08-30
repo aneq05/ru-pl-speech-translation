@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Any
 
 import streamlit as st
-from benchmarking.runner import run_benchmark
 
+from benchmarking.runner import run_benchmark
 from ui.analysis_engine import analyze_uploaded_audio
 from ui.components import (
     render_audio_panel,
@@ -18,8 +18,8 @@ from ui.components import (
 )
 from ui.data import (
     build_flow_steps,
-    find_latest_complete_benchmark_run,
     find_latest_benchmark_run,
+    find_latest_complete_benchmark_run,
     get_plot_paths,
     get_tongue_twister_reference,
     is_complete_benchmark_run,

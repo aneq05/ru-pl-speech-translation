@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import Any
 
@@ -9,6 +8,7 @@ import numpy as np
 from benchmarking.models.base import ASRModel, ASRModelUnavailableError
 from benchmarking.types import ASRPrediction, ASRSegment
 from env_loader import load_env_file
+from hf_utils import call_hf_loader_with_token_fallback, configure_hf_cache, read_hf_token
 
 
 class HFTransformersASRModel(ASRModel):
@@ -21,10 +21,9 @@ class HFTransformersASRModel(ASRModel):
         super().__init__(model_id=f"hf:{model_name}")
         self.model_name = model_name
         self.target_sampling_rate = 16_000
-        self.cache_root = Path("models_cache/huggingface")
         load_env_file()
-        _configure_hf_cache(self.cache_root)
-        hf_token = _read_hf_token()
+        self.cache_root = configure_hf_cache()
+        hf_token = read_hf_token()
 
         try:
             from transformers import pipeline
@@ -45,16 +44,7 @@ class HFTransformersASRModel(ASRModel):
             pipeline_kwargs["token"] = hf_token
 
         try:
-            self._pipeline = pipeline(**pipeline_kwargs)
-        except TypeError as exc:
-            if hf_token and "token" in str(exc):
-                pipeline_kwargs.pop("token", None)
-                pipeline_kwargs["use_auth_token"] = hf_token
-                self._pipeline = pipeline(**pipeline_kwargs)
-            else:
-                raise ASRModelUnavailableError(
-                    f"Could not initialize hf model '{model_name}'. Ensure dependencies are installed and model is reachable."
-                ) from exc
+            self._pipeline = call_hf_loader_with_token_fallback(pipeline, kwargs=pipeline_kwargs)
         except Exception as exc:
             token_hint = (
                 " If this model requires auth, set HF_TOKEN in .env or system environment."
@@ -90,31 +80,6 @@ def _resolve_transformers_device(device: str) -> int:
     if normalized in {"cuda", "gpu"}:
         return 0
     return -1
-
-
-def _configure_hf_cache(cache_root: Path) -> None:
-    cache_root = cache_root.resolve()
-    hub_cache = cache_root / "hub"
-    transformers_cache = cache_root / "transformers"
-    assets_cache = cache_root / "assets"
-
-    for path in (cache_root, hub_cache, transformers_cache, assets_cache):
-        path.mkdir(parents=True, exist_ok=True)
-
-    os.environ.setdefault("HF_HOME", str(cache_root))
-    os.environ.setdefault("HF_HUB_CACHE", str(hub_cache))
-    os.environ.setdefault("TRANSFORMERS_CACHE", str(transformers_cache))
-    os.environ.setdefault("HF_ASSETS_CACHE", str(assets_cache))
-
-
-def _read_hf_token() -> str | None:
-    for key in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"):
-        value = os.getenv(key)
-        if value and value.strip():
-            token = value.strip()
-            os.environ.setdefault("HF_TOKEN", token)
-            return token
-    return None
 
 
 def _disable_broken_torchcodec_support() -> None:

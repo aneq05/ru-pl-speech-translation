@@ -1,184 +1,211 @@
-# ASR Project: Russian -> Polish Tongue Twisters
+# RU-PL Speech Translation
 
-This repository contains:
-- a Streamlit app (`Analysis` + `Model Comparison` modes),
-- a benchmark pipeline for ASR model comparison on Russian tongue-twister recordings,
-- reference text mapping (Russian originals + Polish reference translations).
+End-to-end Python application for benchmarking Russian ASR models on challenging
+tongue-twister recordings and translating recognized speech into Polish. The
+project compares Whisper and Wav2Vec2 with WER/CER, token F1, exact match, and
+inference-time metrics. It also provides an interactive Streamlit interface for
+single-file audio analysis and model comparison.
 
-## Current status
+Project Presentation: [View presentation (PDF)](docs/presentation.pdf)
 
-- `Model Comparison` is connected to real benchmark execution.
-- `Analysis` runs real ASR with `whisper:base` on uploaded audio.
-- `Analysis` Polish output source:
-  - reference catalog translation (when filename matches `data/reference_texts/audio_key_map.json`),
-  - reference catalog translation matched by recognized Russian text similarity,
-  - RU->PL translation model fallback for new/unknown files.
-- Benchmark model execution is sequential (one model at a time) to reduce memory pressure.
+![Benchmark overview](docs/assets/screenshots/benchmark-overview.png)
 
-### Analysis UI (what you see after upload)
+## Example Results
 
-- Waveform preview and audio player for the uploaded `.wav`.
-- Reference panel showing the Russian original and Polish reference (if a mapping exists).
-- Recognized Russian words displayed as a word stream with per-word confidence bars.
-- Full ASR transcript in a disabled text area.
-- Polish translation block showing the translation text and a caption with the translation source.
-- Word-by-word token preview of the Polish output (when available).
+Example benchmark run: `run_20260527_203830`, 58 WAV samples.
+Lower WER/CER and inference time are better; higher token F1 is better.
 
-### Translation fallback logic
+| Model | WER | CER | Token F1 | Avg inference time |
+| --- | ---: | ---: | ---: | ---: |
+| Whisper Small | 0.686 | 0.434 | 0.398 | 91.50 s |
+| Whisper Base | 0.858 | 0.572 | 0.222 | 15.02 s |
+| Wav2Vec2 XLSR Russian | 0.865 | 0.468 | 0.439 | 3.71 s |
+| Whisper Tiny | 1.181 | 0.939 | 0.180 | 12.79 s |
 
-When a recording is analyzed the app resolves the Polish output in this order:
-1. Exact file-name match to the reference catalog (`reference_catalog`).
-2. Best match from reference texts by similarity of the recognized Russian text (`recognized_text_match`).
-3. RU->PL translation model (`model_translation`).
-4. If model loading or inference fails the app reports `translation_model_unavailable`.
-5. If ASR recognized some text but no translation is found, the app reports `missing_translation`.
+Whisper Small produced the best WER in this run, while Wav2Vec2 was the fastest
+model and achieved the strongest token F1. The hardest samples were the longest
+and most repetitive tongue twisters, especially `tri_kitajca`, `sasha`, `carl`,
+`skorogovorun`, and `salo`, where dense names and near-repeated syllables caused
+insertions, substitutions, and language drift.
 
-The similarity matching uses a combination of character SequenceMatcher and token-overlap (see `src/ui/analysis_engine.py`). Transliteration to ASCII is attempted to increase matching robustness.
+The tracked example leaderboard is available in
+[reports/example_results/leaderboard.csv](reports/example_results/leaderboard.csv).
 
-## Quick start
+![Quality vs speed](docs/assets/screenshots/quality-vs-speed.png)
 
-### 1) Environment
+## What It Does
 
-```bash
-python -m venv .venv
-# Windows PowerShell:
-# .venv\Scripts\Activate.ps1
+- Benchmarks Russian ASR models on `.wav` tongue-twister recordings.
+- Computes WER, CER, token precision/recall/F1, exact match, latency, RTF, and memory.
+- Runs a Streamlit UI with single-file analysis and model-comparison views.
+- Uses a Russian/Polish reference catalog for known recordings.
+- Resolves Polish output with a robust fallback pipeline:
+  `filename reference -> transcript similarity matching -> neural RU->PL translation`.
+- Saves leaderboard CSV files and benchmark plots for reproducible comparison.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A["WAV audio"] --> B["ASR adapter"]
+    B --> C["Reference matching"]
+    B --> D["Metrics"]
+    C --> E["RU->PL translation fallback"]
+    D --> F["CSV results and plots"]
+    E --> G["Streamlit UI"]
+    F --> G
+```
+
+Main modules:
+
+| Area | Files |
+| --- | --- |
+| ASR adapters | `src/benchmarking/models/` |
+| Benchmark runner and CLI | `src/benchmarking/runner.py`, `src/benchmarking/cli.py` |
+| Metrics and reporting | `src/benchmarking/metrics.py`, `src/benchmarking/reporting.py` |
+| Dataset loading | `src/benchmarking/dataset.py` |
+| Reference catalog | `src/reference_texts.py`, `data/reference_texts/` |
+| Analysis and translation flow | `src/ui/analysis_engine.py`, `src/ui/translation_engine.py` |
+| Streamlit UI | `src/app.py`, `src/ui/` |
+
+## Models And Evaluation
+
+ASR models are configured in [configs/models.yaml](configs/models.yaml):
+
+- `whisper:tiny`
+- `whisper:base`
+- `whisper:small`
+- `hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian`
+
+Translation:
+
+- NLLB RU->PL: `facebook/nllb-200-distilled-600M`
+
+Evaluation:
+
+- WER and CER for transcription errors,
+- token precision, recall, and F1 for overlap quality,
+- exact match for strict correctness,
+- latency, real-time factor, and peak memory for runtime trade-offs.
+
+## Screenshots
+
+Benchmark charts generated by the pipeline:
+
+![Benchmark overview](docs/assets/screenshots/benchmark-overview.png)
+
+![Quality vs speed](docs/assets/screenshots/quality-vs-speed.png)
+
+Recommended additions before publishing:
+
+```text
+docs/assets/screenshots/analysis.png
+docs/assets/screenshots/model-comparison.png
+docs/assets/demo/app-demo.gif
+```
+
+## Quick Start
+
+Create and activate a virtual environment:
+
+```powershell
+py -3.10 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-`requirements.txt` includes UI and plotting dependencies. By default it installs the lightweight UI stack:
+Install optional ASR and translation backends when you want the full app:
 
-- `streamlit`, `soundfile`, `numpy`, `plotly`, `librosa`, `unidecode` (UI/visualization + helpers)
-
-For full ASR + translation functionality (Analysis mode + Whisper benchmark models), install optional backends:
-
-```bash
+```powershell
 pip install openai-whisper transformers torch sentencepiece
 ```
 
-Note: `sentencepiece` is required by some Hugging Face translation tokenizers.
-
-Optional (recommended for stable HF auth in local runs/CI): create `.env` in repo root:
+Optional Hugging Face token:
 
 ```env
 HF_TOKEN=hf_xxx_your_read_token
-# Optional override for Analysis translation fallback model:
-# RU_PL_TRANSLATION_MODEL_ID=facebook/nllb-200-distilled-600M
+RU_PL_TRANSLATION_MODEL_ID=facebook/nllb-200-distilled-600M
 ```
 
-`HF_TOKEN` is loaded automatically by both:
-- CLI (`python main.py ...`)
-- Streamlit app (`streamlit run src/app.py`)
+Run the Streamlit app:
 
-### 2) Run Streamlit app
-
-```bash
+```powershell
 streamlit run src/app.py
 ```
 
-Modes:
-- `Analysis`
-  - upload `.wav`,
-  - show waveform,
-  - show matched reference text by filename (if found),
-  - run real transcription with `whisper:base`,
-  - show Polish output from reference translation, recognized-text match, or RU->PL model translation fallback.
-- `Model Comparison`
-  - click `Run benchmark on dataset`,
-  - run benchmark on `data/raw`,
-  - display leaderboard, interactive Plotly charts, and saved PNG charts.
+Run the benchmark from CLI:
 
-### 3) Run benchmark from CLI
-
-Default:
-
-```bash
+```powershell
 python main.py benchmark --data-dir data/raw
 ```
 
-Single-model smoke test:
+After editable install you can also use:
 
-```bash
-python main.py benchmark --data-dir data/raw --models whisper:tiny
+```powershell
+pip install -e .
+asr-benchmark benchmark --data-dir data/raw
 ```
 
-HF model smoke test:
+## App Modes
 
-```bash
-python main.py benchmark --data-dir data/raw --models hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian
-```
+**Analysis**
 
-Explicit 4-model comparison:
+Upload a `.wav` file and the app will:
 
-```bash
-python main.py benchmark --data-dir data/raw --models whisper:tiny whisper:base whisper:small hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian
-```
+- render an audio player and waveform preview,
+- match the file against the reference catalog when possible,
+- transcribe Russian speech with Whisper,
+- display recognized words with confidence bars,
+- resolve Polish output from catalog, text similarity, or model translation.
 
-Custom output directory:
+**Model Comparison**
 
-```bash
-python main.py benchmark --data-dir data/raw --reports-dir reports/results
-```
+Run the benchmark on `data/raw` and inspect:
 
-## Default models
+- leaderboard table,
+- interactive Plotly charts,
+- saved PNG plots,
+- detailed per-sample CSV output.
 
-From `configs/models.yaml` / built-in fallback:
+## Dataset Contract
 
-```yaml
-models:
-  - whisper:tiny
-  - whisper:base
-  - whisper:small
-  - hf:jonatasgrosman/wav2vec2-large-xlsr-53-russian
-```
+The benchmark loader scans `data/raw` recursively and expects `.wav` audio files.
+Files without reference text are skipped.
 
-Model id formats:
-- `whisper:<size>`
-- `hf:<huggingface_model_id>`
+Reference text can come from:
 
-## Dataset contract (current loader)
+1. `labels.csv`, `references.csv`, or `metadata.csv` in `data/raw`,
+2. sidecar `.txt` files next to audio files,
+3. `data/reference_texts` catalog matched by normalized file name.
 
-- Audio format: `.wav` only (recursive scan under `data/raw`).
-- If a file has no reference text, it is skipped.
-- At least one valid `(audio + reference)` sample is required.
-
-If you want to analyze a single uploaded file that is not present in `data/raw`, the `Analysis` UI still runs ASR on the uploaded file and then attempts translation via the fallback logic (reference match -> text-match -> RU->PL model). If the translation model is unavailable, the UI will show an explanatory status message.
-
-Reference sources (priority):
-1. `labels.csv` / `references.csv` / `metadata.csv` in dataset root (`data/raw`) with file and text columns.
-2. Sidecar `.txt` file next to `.wav`.
-3. `data/reference_texts` catalog mapping by normalized filename key.
-
-Example `labels.csv` row:
+Example CSV:
 
 ```csv
 file_name,reference_text
-person1/carl.wav,Shla Sasha po shosse i sosala sushku.
+person1/carl.wav,Karl u Klary ukral korally
 ```
 
-## Reference text catalog
+Large datasets, private recordings, and model caches are intentionally not
+tracked in Git. If recordings contain real voices, publish only samples that are
+cleared for public use and keep the full dataset private or access-controlled.
 
-Folder: `data/reference_texts/`
+## Outputs
 
-- `ru/<id>.txt` - Russian original
-- `pl/<id>.txt` - Polish reference translation
-- `audio_key_map.json` - filename-key to reference-id mapping
+CLI benchmark output:
 
-Used by:
-- benchmark dataset loader (fallback reference source),
-- Streamlit reference panel in `Analysis` mode.
+```text
+reports/results/run_<timestamp>/
+```
 
-You can add new canonical references by placing paired files in `data/reference_texts/ru` and `data/reference_texts/pl` and updating `audio_key_map.json` to map filenames (or keys) to reference IDs.
+Streamlit comparison output:
 
-## Output directories
+```text
+src/ui/model_comparison/results/run_<timestamp>/
+```
 
-CLI benchmark output (default):
-- `reports/results/run_<timestamp>/`
+Each complete run contains:
 
-Streamlit `Model Comparison` output:
-- `src/ui/model_comparison/results/run_<timestamp>/`
-
-Each run contains:
 - `detailed_results.csv`
 - `leaderboard.csv`
 - `plots/01_overview_metrics.png`
@@ -186,36 +213,59 @@ Each run contains:
 - `plots/03_wer_boxplot.png`
 - `plots/04_model_heatmap.png`
 
-## Repository layout
+## Repository Layout
 
-- `src/app.py` - Streamlit entrypoint
-- `src/ui/` - UI components, styles, comparison charts
-- `src/benchmarking/` - dataset loading, model adapters, metrics, reporting, runner
-- `src/reference_texts.py` - reference catalog loader and filename normalization
-- `configs/models.yaml` - default benchmark model list
-- `data/raw/` - input audio + optional CSV labels
-- `data/reference_texts/` - canonical RU/PL reference texts
+```text
+configs/                 benchmark model config
+data/raw/                local audio dataset (ignored except .gitkeep)
+data/reference_texts/    RU/PL reference catalog
+docs/presentation.pdf    project presentation
+docs/project_notes/      course notes and implementation notes
+reports/example_results/ tracked benchmark summary for README
+reports/results/         CLI benchmark outputs (ignored except .gitkeep)
+src/app.py               Streamlit entrypoint
+src/benchmarking/        dataset loading, models, metrics, reporting, CLI
+src/ui/                  Streamlit UI and analysis flow
+tests/                   focused unit tests for core logic
+```
 
-Key implementation files to inspect:
+## Development
 
-- `src/ui/analysis_engine.py` - orchestrates ASR, temporary audio handling, reference lookup, similarity matching and translation fallback.
-- `src/ui/translation_engine.py` - RU->PL translation adapter using Hugging Face seq2seq models (configurable via `RU_PL_TRANSLATION_MODEL_ID`).
-- `src/ui/components.py` and `src/ui/page.py` - Streamlit rendering of the Analysis and Model Comparison UI and controls.
+Install development dependencies:
+
+```powershell
+pip install -e ".[dev]"
+```
+
+Run tests:
+
+```powershell
+pytest
+```
+
+Check syntax without running models:
+
+```powershell
+python -m compileall main.py src tests
+```
+
+Run linting:
+
+```powershell
+ruff check .
+```
+
+## CI
+
+The GitHub Actions workflow runs dependency installation, Ruff, unit tests, and
+syntax checks. It intentionally does not download Whisper, Wav2Vec2, NLLB, or the
+private audio dataset; full model inference stays as a local/manual integration
+test.
 
 ## Notes
 
-- Local model caches are stored under `models_cache/` (`whisper` and `huggingface` subfolders).
-- First benchmark run can be much slower because models are downloaded.
-- First `Analysis` translation fallback on unknown files can also be slow (RU->PL model download).
-- Full 4-model run on CPU can take a long time for larger datasets.
-
-## Troubleshooting & development tips
-
-- If the app shows `Translation model unavailable`, ensure `transformers`, `torch` and `sentencepiece` are installed and optionally set `HF_TOKEN` for private model access.
-- Local HF cache and downloaded models are stored under `models_cache/`. Pre-downloading models into this folder can speed up runs in air-gapped environments.
-- Streamlit `Analysis` currently uses `DEFAULT_DEVICE = "cpu"` from `src/ui/analysis_engine.py` (it is not read from env yet). To change it, update that constant in code.
-- Logs and intermediate benchmark outputs are under `reports/` and `src/ui/model_comparison/results/`.
-
-## Data link
-
-[Google Drive dataset folder](https://drive.google.com/drive/u/0/folders/1YfVdSFDDbJO21MES5UfFM7B1O_qED0Ko?pli=1&sort=13&direction=a)
+- `models_cache/` is ignored because Whisper and Hugging Face downloads can be large.
+- `.env` is ignored and should never be committed.
+- Generated benchmark runs stay out of Git except curated files in `reports/example_results/`.
+- First model run can be slow because weights are downloaded.
+- CPU inference works, but larger models can be slow; use `--device cuda` when available.

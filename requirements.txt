@@ -11,3 +11,7 @@ unidecode
 # transformers
 # torch
 # sentencepiece
+
+# Development tools:
+# pytest
+# ruff

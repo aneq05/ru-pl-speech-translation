@@ -19,4 +19,7 @@ Reference library details:
 - `data/reference_texts/pl/*.txt` - reference Polish translations
 - `data/reference_texts/audio_key_map.json` - mapping from filename key to reference id
 
-If the dataset becomes too large or uses inconvenient formats, keep the audio outside GitHub and store only a link/reference here.
+If the dataset becomes too large, uses inconvenient formats, or contains real
+voices without explicit public-sharing consent, keep the audio outside GitHub.
+For public repositories prefer `data/demo/` with 1-2 cleared samples and document
+the full dataset as private or access-controlled.

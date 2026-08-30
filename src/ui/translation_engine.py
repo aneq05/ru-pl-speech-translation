@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 import os
 from dataclasses import dataclass
 from functools import lru_cache
-from pathlib import Path
 from typing import Any
 
 from env_loader import load_env_file
+from hf_utils import call_hf_loader_with_token_fallback, configure_hf_cache, read_hf_token
 
 DEFAULT_RU_PL_MODEL_ID = "facebook/nllb-200-distilled-600M"
 SOURCE_LANG_CODE = "rus_Cyrl"
@@ -26,9 +27,8 @@ class RUToPLTranslator:
     def __init__(self, *, model_id: str, device: str) -> None:
         load_env_file()
         self.model_id = model_id
-        self.cache_root = Path("models_cache/huggingface")
-        _configure_hf_cache(self.cache_root)
-        hf_token = _read_hf_token()
+        self.cache_root = configure_hf_cache()
+        hf_token = read_hf_token()
 
         try:
             import torch
@@ -49,15 +49,15 @@ class RUToPLTranslator:
             tokenizer_kwargs["token"] = hf_token
             model_kwargs["token"] = hf_token
 
-        self._tokenizer = _load_pretrained_with_token_fallback(
+        self._tokenizer = call_hf_loader_with_token_fallback(
             AutoTokenizer.from_pretrained,
             model_id,
-            tokenizer_kwargs,
+            kwargs=tokenizer_kwargs,
         )
-        self._model = _load_pretrained_with_token_fallback(
+        self._model = call_hf_loader_with_token_fallback(
             AutoModelForSeq2SeqLM.from_pretrained,
             model_id,
-            model_kwargs,
+            kwargs=model_kwargs,
         )
         self._torch = torch
         self._torch_device = _resolve_torch_device(torch=torch, requested_device=device)
@@ -117,22 +117,6 @@ def _get_ru_pl_translator(*, model_id: str, device: str) -> RUToPLTranslator:
     return RUToPLTranslator(model_id=model_id, device=device)
 
 
-def _load_pretrained_with_token_fallback(loader: Any, model_id: str, kwargs: dict[str, Any]) -> Any:
-    try:
-        return loader(model_id, **kwargs)
-    except TypeError as exc:
-        if "token" not in kwargs:
-            raise
-        if "token" not in str(exc):
-            raise
-
-    fallback_kwargs = dict(kwargs)
-    token = fallback_kwargs.pop("token", None)
-    if token is not None:
-        fallback_kwargs["use_auth_token"] = token
-    return loader(model_id, **fallback_kwargs)
-
-
 def _resolve_torch_device(*, torch: Any, requested_device: str) -> Any:
     normalized = requested_device.strip().lower()
     if normalized in {"cuda", "gpu"} and torch.cuda.is_available():
@@ -144,28 +128,3 @@ def _resolve_torch_device(*, torch: Any, requested_device: str) -> Any:
             return torch.device("mps")
 
     return torch.device("cpu")
-
-
-def _configure_hf_cache(cache_root: Path) -> None:
-    cache_root = cache_root.resolve()
-    hub_cache = cache_root / "hub"
-    transformers_cache = cache_root / "transformers"
-    assets_cache = cache_root / "assets"
-
-    for path in (cache_root, hub_cache, transformers_cache, assets_cache):
-        path.mkdir(parents=True, exist_ok=True)
-
-    os.environ.setdefault("HF_HOME", str(cache_root))
-    os.environ.setdefault("HF_HUB_CACHE", str(hub_cache))
-    os.environ.setdefault("TRANSFORMERS_CACHE", str(transformers_cache))
-    os.environ.setdefault("HF_ASSETS_CACHE", str(assets_cache))
-
-
-def _read_hf_token() -> str | None:
-    for key in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN"):
-        value = os.getenv(key)
-        if value and value.strip():
-            token = value.strip()
-            os.environ.setdefault("HF_TOKEN", token)
-            return token
-    return None

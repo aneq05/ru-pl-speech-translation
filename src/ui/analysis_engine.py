@@ -2,16 +2,16 @@ from __future__ import annotations
 
 import re
 import tempfile
+from difflib import SequenceMatcher
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
-from difflib import SequenceMatcher
 
 from benchmarking.model_registry import create_model
 from benchmarking.models.base import ASRModel
+from benchmarking.models.whisper_adapter import WhisperASRModel
 from reference_texts import get_reference_by_file_name, load_reference_catalog
 from ui.translation_engine import translate_ru_text_to_polish
-from benchmarking.models.whisper_adapter import WhisperASRModel
 
 try:
     from unidecode import unidecode

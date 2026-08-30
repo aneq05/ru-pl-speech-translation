@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-
 DEFAULT_MODELS_CONFIG_PATH = Path("configs/models.yaml")
 
 

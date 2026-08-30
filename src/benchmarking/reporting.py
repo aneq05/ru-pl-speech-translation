@@ -245,4 +245,4 @@ def _configure_plot_style(plt: Any) -> None:
 def _short_label(model_id: str, max_len: int = 24) -> str:
     if len(model_id) <= max_len:
         return model_id
-    return model_id[: max_len - 1] + "…"
+    return model_id[: max_len - 3] + "..."

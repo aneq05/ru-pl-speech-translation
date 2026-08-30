@@ -5,16 +5,48 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ru-pl-speech-translation"
 version = "0.3.0"
-description = "Skeleton for RU->PL speech translation course project."
+description = "Streamlit app and benchmark pipeline for Russian ASR with Polish translation support."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "streamlit",
+    "numpy",
+    "soundfile",
+    "librosa",
+    "matplotlib",
+    "plotly",
+    "unidecode",
+]
 
 [project.scripts]
-ru-pl-st = "ru_pl_st.cli:main"
+asr-benchmark = "benchmarking.cli:main"
+
+[project.optional-dependencies]
+asr = [
+    "openai-whisper",
+    "transformers",
+    "torch",
+    "sentencepiece",
+]
+dev = [
+    "pytest",
+    "ruff",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+ignore = ["E501"]
+select = ["E", "F", "I"]
