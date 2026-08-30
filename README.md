@@ -225,7 +225,9 @@ reports/results/         CLI benchmark outputs (ignored except .gitkeep)
 src/app.py               Streamlit entrypoint
 src/benchmarking/        dataset loading, models, metrics, reporting, CLI
 src/ui/                  Streamlit UI and analysis flow
-tests/                   focused unit tests for core logic
+tests/benchmarking/      unit tests mirroring src/benchmarking modules
+tests/ui/                unit tests for UI-adjacent pure logic
+tests/                   unit tests for root-level src modules
 ```
 
 ## Development
