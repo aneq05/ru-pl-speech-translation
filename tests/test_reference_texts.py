@@ -42,3 +42,21 @@ def test_get_reference_by_file_name_uses_audio_key_map(tmp_path: Path) -> None:
     assert entry is not None
     assert entry.reference_id == "sasha"
     assert entry.polish_translation == "Sasha PL"
+
+
+def test_load_reference_catalog_fails_when_translation_pair_is_incomplete(tmp_path: Path) -> None:
+    (tmp_path / "ru").mkdir()
+    (tmp_path / "pl").mkdir()
+    (tmp_path / "audio_key_map.json").write_text(
+        '{"audio_key_to_reference_id": {"carl": "carl"}}',
+        encoding="utf-8",
+    )
+    (tmp_path / "ru" / "carl.txt").write_text("Karl RU", encoding="utf-8")
+    load_reference_catalog.cache_clear()
+
+    try:
+        load_reference_catalog(tmp_path)
+    except FileNotFoundError as exc:
+        assert "Missing Polish reference file" in str(exc)
+    else:
+        raise AssertionError("Expected incomplete RU/PL reference pair to fail")

@@ -59,3 +59,62 @@ def test_polish_output_uses_model_translation_as_last_content_fallback(monkeypat
 
     assert translation == "Tlumaczenie modelowe"
     assert source == "model_translation"
+
+
+def test_polish_output_reports_unavailable_translation_model(monkeypatch) -> None:
+    monkeypatch.setattr(analysis_engine, "get_reference_by_file_name", lambda file_name: None)
+    monkeypatch.setattr(
+        analysis_engine,
+        "_resolve_polish_from_recognized_text",
+        lambda recognized_text: None,
+    )
+    monkeypatch.setattr(
+        analysis_engine,
+        "translate_ru_text_to_polish",
+        lambda text, device: TranslationResult(text="", status="backend_unavailable"),
+    )
+
+    translation, source = analysis_engine._resolve_polish_output(
+        file_name="unknown.wav",
+        recognized_text="tekst rozpoznany",
+        device="cpu",
+    )
+
+    assert translation == ""
+    assert source == "translation_model_unavailable"
+
+
+def test_resolve_polish_from_recognized_text_uses_similarity(monkeypatch) -> None:
+    catalog = SimpleNamespace(
+        by_id={
+            "carl": SimpleNamespace(
+                russian_original="Karl u Klary ukral korally",
+                polish_translation="Karol ukradl korale Klarze.",
+            ),
+            "sasha": SimpleNamespace(
+                russian_original="Shla Sasha po shosse",
+                polish_translation="Sasza szla szosa.",
+            ),
+        }
+    )
+    monkeypatch.setattr(analysis_engine, "load_reference_catalog", lambda: catalog)
+
+    translation = analysis_engine._resolve_polish_from_recognized_text(
+        "Karl u Klary ukral koraly"
+    )
+
+    assert translation == "Karol ukradl korale Klarze."
+
+
+def test_resolve_polish_from_recognized_text_rejects_weak_match(monkeypatch) -> None:
+    catalog = SimpleNamespace(
+        by_id={
+            "carl": SimpleNamespace(
+                russian_original="Karl u Klary ukral korally",
+                polish_translation="Karol ukradl korale Klarze.",
+            )
+        }
+    )
+    monkeypatch.setattr(analysis_engine, "load_reference_catalog", lambda: catalog)
+
+    assert analysis_engine._resolve_polish_from_recognized_text("totally unrelated") is None

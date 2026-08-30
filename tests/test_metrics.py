@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from benchmarking.metrics import compute_text_metrics, normalize_text
 
 
@@ -28,3 +30,24 @@ def test_compute_text_metrics_substitution() -> None:
     assert metrics.wer == 1 / 3
     assert metrics.token_precision == 2 / 3
     assert metrics.token_recall == 2 / 3
+
+
+def test_compute_text_metrics_penalizes_insertions() -> None:
+    metrics = compute_text_metrics("raz dwa", "raz dwa trzy")
+
+    assert metrics.wer == pytest.approx(1 / 2)
+    assert metrics.token_precision == pytest.approx(2 / 3)
+    assert metrics.token_recall == 1.0
+    assert metrics.exact_match == 0.0
+
+
+def test_compute_text_metrics_handles_empty_inputs() -> None:
+    both_empty = compute_text_metrics("", "")
+    missing_hypothesis = compute_text_metrics("raz", "")
+
+    assert both_empty.wer == 0.0
+    assert both_empty.cer == 0.0
+    assert both_empty.token_f1 == 1.0
+    assert both_empty.exact_match == 0.0
+    assert missing_hypothesis.wer == 1.0
+    assert missing_hypothesis.token_f1 == 0.0

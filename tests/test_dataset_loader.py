@@ -46,6 +46,23 @@ def test_load_dataset_uses_sidecar_reference(tmp_path: Path) -> None:
     assert samples[0].reference_text == "Sasha reference"
 
 
+def test_load_dataset_prefers_csv_reference_over_sidecar(tmp_path: Path) -> None:
+    raw_dir = tmp_path / "raw"
+    raw_dir.mkdir()
+    audio_path = raw_dir / "mixed.wav"
+    _write_wav(audio_path)
+    audio_path.with_suffix(".txt").write_text("Sidecar reference", encoding="utf-8")
+    (raw_dir / "labels.csv").write_text(
+        "file_name,reference_text\nmixed.wav,CSV reference\n",
+        encoding="utf-8",
+    )
+
+    samples = load_dataset(raw_dir)
+
+    assert len(samples) == 1
+    assert samples[0].reference_text == "CSV reference"
+
+
 def test_load_dataset_reports_missing_references(tmp_path: Path) -> None:
     raw_dir = tmp_path / "raw"
     raw_dir.mkdir()
