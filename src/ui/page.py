@@ -1,5 +1,6 @@
 ﻿from __future__ import annotations
 
+from html import escape
 from pathlib import Path
 from typing import Any
 
@@ -100,14 +101,7 @@ def _handle_actions(sidebar_state: SidebarState) -> None:
 def _render_message() -> None:
     message = st.session_state.ui_message
     if message:
-        st.markdown(
-            f"""
-            <div class="soft-box" style="margin-bottom:0.95rem;">
-                <strong>Status:</strong> {message}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        _render_status_message(message)
 
 
 def _render_comparison_message() -> None:
@@ -115,10 +109,15 @@ def _render_comparison_message() -> None:
     if not message:
         return
 
+    _render_status_message(message)
+
+
+def _render_status_message(message: object) -> None:
+    safe_message = escape(str(message))
     st.markdown(
         f"""
         <div class="soft-box" style="margin-bottom:0.95rem;">
-            <strong>Status:</strong> {message}
+            <strong>Status:</strong> {safe_message}
         </div>
         """,
         unsafe_allow_html=True,
